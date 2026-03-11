@@ -501,7 +501,7 @@
 <header class="site-header">
 <div class="header-top">
 <div class="classification">OPEN SOURCE INTELLIGENCE — PUBLIC RECORD</div>
-<div class="live-indicator"><div class="live-dot"></div>CONFLICT ACTIVE — DAY 11</div>
+<div class="live-indicator"><div class="live-dot"></div>CONFLICT ACTIVE — DAY <span id="live-day-num">—</span></div>
 </div>
 <div class="header-main">
 <h1 class="site-title">HORMUZ <span>ARCHIVE</span></h1>
@@ -672,13 +672,13 @@
     el?.classList.add('active');
   }
 
-  // ── Live Brent Crude price — via public Yahoo Finance proxy ──────────────────
+  // ── Live Brent Crude price — via allorigins.win CORS proxy → Yahoo Finance ───
   async function fetchBrent() {
     try {
-      const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1m&range=1d', {
-        headers: { 'Accept': 'application/json' }
-      });
-      const data = await res.json();
+      const target = 'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1m&range=1d';
+      const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(target));
+      const wrapper = await res.json();
+      const data = JSON.parse(wrapper.contents);
       const meta = data?.chart?.result?.[0]?.meta;
       if (meta) {
         const price  = meta.regularMarketPrice?.toFixed(2);
@@ -704,6 +704,8 @@
   const conflictDay = Math.floor((now - warStart) / (1000 * 60 * 60 * 24)) + 1;
   const dayEl = document.getElementById('conflict-day');
   if (dayEl) dayEl.textContent = conflictDay;
+  const bannerEl = document.getElementById('live-day-num');
+  if (bannerEl) bannerEl.textContent = conflictDay;
 
   // ── Vessel count ─────────────────────────────────────────────────────────────
   const vesselEl = document.getElementById('vessel-count');

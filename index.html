@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HORMUZ ARCHIVE — Operation Epic Fury: The Record</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a08;
+    --surface: #111110;
+    --border: #2a2a26;
+    --border-bright: #3a3a34;
+    --text: #c8c8b8;
+    --text-dim: #6a6a5a;
+    --text-bright: #e8e8d8;
+    --amber: #d4a843;
+    --amber-dim: #8a6d2a;
+    --red: #c0392b;
+    --red-dim: #7a2420;
+    --green: #4a7c59;
+    --green-bright: #6aaa7a;
+    --mono: 'Space Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .classification {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--red);
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .header-main { padding: 24px 32px 20px; }
+
+  .site-title {
+    font-family: var(--serif);
+    font-size: 42px;
+    color: var(--text-bright);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .site-title span { color: var(--amber); font-style: italic; }
+
+  .site-subtitle {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .header-meta {
+    display: flex;
+    gap: 32px;
+    padding: 12px 32px;
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .meta-stat { display: flex; flex-direction: column; gap: 2px; white-space: nowrap; }
+  .meta-label { font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; }
+  .meta-value { font-size: 13px; color: var(--amber); font-weight: 700; }
+  .meta-value.red { color: var(--red); }
+
+  .filters {
+    padding: 16px 32px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .filter-btn {
+    padding: 5px 14px;
+    border: 1px solid var(--border-bright);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .filter-btn.active { background: var(--amber); border-color: var(--amber); color: var(--bg); font-weight: 700; }
+  .filter-btn.confirmed.active { background: var(--green-bright); border-color: var(--green-bright); color: var(--bg); }
+  .filter-btn.suppressed.active { background: var(--red); border-color: var(--red); color: var(--bg); }
+  .filter-btn.economic.active { background: #7a9ec0; border-color: #7a9ec0; color: var(--bg); }
+
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 200px);
+  }
+
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 170px;
+    height: calc(100vh - 170px);
+    overflow-y: auto;
+  }
+
+  .sidebar-section {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .sidebar-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .day-nav { display: flex; flex-direction: column; gap: 2px; }
+
+  .day-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 11px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .day-link:hover { color: var(--text-bright); border-left-color: var(--border-bright); background: rgba(255,255,255,0.02); }
+  .day-link.active { color: var(--amber); border-left-color: var(--amber); background: rgba(212,168,67,0.05); }
+  .day-count { font-size: 9px; color: var(--text-dim); }
+
+  .legend { display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-dim); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-dot.confirmed { background: var(--green-bright); }
+  .legend-dot.unconfirmed { background: var(--amber); }
+  .legend-dot.suppressed { background: var(--red); }
+  .legend-dot.economic { background: #7a9ec0; }
+
+  .timeline { padding: 32px; }
+
+  .day-block { margin-bottom: 48px; }
+
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .day-number {
+    font-family: var(--serif);
+    font-size: 48px;
+    color: var(--border-bright);
+    line-height: 1;
+    font-style: italic;
+  }
+
+  .day-info { display: flex; flex-direction: column; gap: 2px; }
+  .day-date { font-size: 11px; color: var(--text-bright); letter-spacing: 0.1em; }
+  .day-summary { font-size: 10px; color: var(--text-dim); font-style: italic; }
+
+  .event-card {
+    display: grid;
+    grid-template-columns: 4px 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: fadeIn 0.3s forwards;
+  }
+
+  @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+  .event-bar { width: 4px; border-radius: 2px; background: var(--border-bright); }
+  .event-bar.confirmed { background: var(--green-bright); }
+  .event-bar.unconfirmed { background: var(--amber); }
+  .event-bar.suppressed { background: var(--red); }
+  .event-bar.economic { background: #7a9ec0; }
+
+  .event-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    transition: border-color 0.15s;
+  }
+
+  .event-body:hover { border-color: var(--border-bright); }
+
+  .event-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .event-status {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    font-weight: 700;
+  }
+
+  .event-status.confirmed { background: rgba(106,170,122,0.15); color: var(--green-bright); border: 1px solid var(--green); }
+  .event-status.unconfirmed { background: rgba(212,168,67,0.1); color: var(--amber); border: 1px solid var(--amber-dim); }
+  .event-status.suppressed { background: rgba(192,57,43,0.1); color: #e74c3c; border: 1px solid var(--red-dim); }
+  .event-status.economic { background: rgba(122,158,192,0.1); color: #7a9ec0; border: 1px solid #4a6e8a; }
+
+  .event-category { font-size: 9px; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; }
+  .event-id { font-size: 9px; color: var(--text-dim); margin-left: auto; opacity: 0.5; }
+
+  .event-title {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--text-bright);
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+
+  .event-description {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+
+  /* Source links block */
+  .event-sources {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+
+  .sources-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .source-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .source-name {
+    font-size: 10px;
+    color: var(--text-dim);
+    min-width: 120px;
+  }
+
+  .source-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .source-link {
+    font-size: 10px;
+    color: var(--amber);
+    text-decoration: none;
+    padding: 2px 8px;
+    border: 1px solid var(--amber-dim);
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .source-link:hover {
+    background: var(--amber);
+    color: var(--bg);
+  }
+
+  .source-link.archived {
+    color: var(--text-dim);
+    border-color: var(--border-bright);
+    font-style: italic;
+  }
+
+  .source-link.archived:hover {
+    background: var(--border-bright);
+    color: var(--text-bright);
+  }
+
+  .source-link.deleted {
+    color: var(--red);
+    border-color: var(--red-dim);
+    text-decoration: line-through;
+  }
+
+  .confidence-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .confidence-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; }
+
+  .confidence-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    max-width: 120px;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    background: var(--green-bright);
+    transition: width 0.3s;
+  }
+
+  .confidence-fill.medium { background: var(--amber); }
+  .confidence-fill.low { background: var(--red); }
+
+  .confidence-pct { font-size: 9px; color: var(--text-dim); }
+
+  .event-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .event-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .tag {
+    font-size: 9px;
+    padding: 2px 6px;
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .monitoring-note {
+    background: rgba(212,168,67,0.05);
+    border: 1px solid var(--amber-dim);
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--amber);
+    font-style: italic;
+  }
+
+  .monitoring-note::before {
+    content: '▶ MONITORING: ';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+  }
+
+  .event-card.hidden { display: none; }
+
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 32px;
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); }
+
+  .live-price-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .live-badge {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    color: var(--green-bright);
+    text-transform: uppercase;
+  }
+
+  .tradingview-widget-container {
+    line-height: 0;
+  }
+
+  .marine-map-wrap {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .marine-map-wrap iframe {
+    width: 100%;
+    height: 180px;
+    border: 1px solid var(--border);
+    filter: grayscale(0.3) brightness(0.85);
+  }
+
+  .map-disclaimer {
+    font-size: 9px;
+    color: var(--red);
+    margin-top: 6px;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; }
+    .site-title { font-size: 28px; }
+    .timeline { padding: 16px; }
+    .header-top, .header-main, .filters { padding: 12px 16px; }
+    .header-meta { padding: 10px 16px; gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-top">
+    <div class="classification">OPEN SOURCE INTELLIGENCE — PUBLIC RECORD</div>
+    <div class="live-indicator"><div class="live-dot"></div>CONFLICT ACTIVE — DAY 11</div>
+  </div>
+  <div class="header-main">
+    <h1 class="site-title">HORMUZ <span>ARCHIVE</span></h1>
+    <div class="site-subtitle">Operation Epic Fury — The Contemporaneous Record — February 28, 2026 →</div>
+  </div>
+  <div class="header-meta">
+    <div class="meta-stat"><div class="meta-label">Conflict Day</div><div class="meta-value" id="conflict-day">11</div></div>
+
+    <!-- LIVE BRENT CRUDE -->
+    <div class="meta-stat">
+      <div class="meta-label">Brent Crude <span class="live-badge">● LIVE</span></div>
+      <div class="meta-value red" id="brent-price">—</div>
+      <div id="brent-change" style="font-size:10px;color:var(--text-dim);margin-top:1px;">fetching…</div>
+      <a href="#evt-023" style="font-size:9px;color:var(--red);text-decoration:none;margin-top:2px;letter-spacing:0.1em;">↓ suppressed — see EVT-023 ›</a>
+    </div>
+
+    <div class="meta-stat"><div class="meta-label">Sunday Peak</div><div class="meta-value">$118.00</div></div>
+    <div class="meta-stat"><div class="meta-label">Iraq Production Lost</div><div class="meta-value red">3.0M bbl/day</div></div>
+
+    <!-- LIVE VESSEL COUNT — queried from MarineTraffic public data -->
+    <div class="meta-stat">
+      <div class="meta-label">Hormuz Transits <span class="live-badge">● LIVE</span></div>
+      <div class="meta-value red" id="vessel-count">Loading…</div>
+      <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">vessels last 24h</div>
+    </div>
+
+    <div class="meta-stat"><div class="meta-label">Supply Shock vs History</div><div class="meta-value red">4× largest ever</div></div>
+    <div class="meta-stat"><div class="meta-label">Strait Status</div><div class="meta-value red">MINED — Day 11</div></div>
+  </div>
+</header>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="filterEvents('all',this)">ALL</button>
+  <button class="filter-btn confirmed" onclick="filterEvents('confirmed',this)">● CONFIRMED</button>
+  <button class="filter-btn unconfirmed" onclick="filterEvents('unconfirmed',this)">● MONITORING</button>
+  <button class="filter-btn suppressed" onclick="filterEvents('suppressed',this)">● SUPPRESSED / DELETED</button>
+  <button class="filter-btn economic" onclick="filterEvents('economic',this)">● ECONOMIC</button>
+</div>
+
+<div class="main">
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Navigate by Day</div>
+    <div class="day-nav">
+      <div class="day-link active" onclick="scrollToDay('day1',this)"><span>Day 1 — Feb 28</span><span class="day-count">4 events</span></div>
+      <div class="day-link" onclick="scrollToDay('day7',this)"><span>Day 7 — Mar 6</span><span class="day-count">5 events</span></div>
+      <div class="day-link" onclick="scrollToDay('day9',this)"><span>Day 9–10 — Mar 8–9</span><span class="day-count">6 events</span></div>
+      <div class="day-link" onclick="scrollToDay('day11',this)"><span>Day 11 — Mar 10</span><span class="day-count">8 events</span></div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Status Key</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot confirmed"></div><span>Confirmed — verified by multiple independent sources</span></div>
+      <div class="legend-item"><div class="legend-dot unconfirmed"></div><span>Monitoring — credible, high-probability, unconfirmed</span></div>
+      <div class="legend-item"><div class="legend-dot suppressed"></div><span>Suppressed — deleted posts, blinded sources, censored data</span></div>
+      <div class="legend-item"><div class="legend-dot economic"></div><span>Economic — market data, financial impacts</span></div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">About This Archive</div>
+    <p style="font-size:11px;color:var(--text-dim);line-height:1.7;">A contemporaneous record separating confirmed facts from monitored claims. Built because history is written by winners — this record exists before the revisionism begins.</p>
+  </div>
+
+  <!-- LIVE HORMUZ VESSEL MAP -->
+  <div class="marine-map-wrap">
+    <div class="sidebar-label">Strait of Hormuz — Live Vessels <span class="live-badge">● LIVE</span></div>
+    <iframe
+      src="https://www.marinetraffic.com/en/ais/embed/zoom:8/centery:26.5/centerx:56.3/maptype:4/shownames:false/mmsi:0/shipid:0/fleet:/fleet_id:/vtypes:/showmenu:/remember:false"
+      scrolling="no"
+      frameborder="0"
+      allowfullscreen>
+    </iframe>
+    <div class="map-disclaimer">⚠ GPS spoofing confirmed near Ras Al Khaimah (Mar 10). Vessel positions may not reflect reality. AIS data shown as reported.</div>
+  </div>
+</aside>
+
+<div class="timeline">
+
+<!-- ═══════════════════════ DAY 1 ═══════════════════════ -->
+<div class="day-block" id="day1">
+  <div class="day-header">
+    <div class="day-number">01</div>
+    <div class="day-info">
+      <div class="day-date">FEBRUARY 28, 2026</div>
+      <div class="day-summary">Operation Epic Fury begins. Khamenei killed. Iran retaliates across 9 countries. Insurance closes Hormuz.</div>
+    </div>
+  </div>
+
+  <!-- EVT-001 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Military / Political</span>
+        <span class="event-id">EVT-001</span>
+      </div>
+      <div class="event-title">US-Israel launch Operation Epic Fury — Khamenei killed</div>
+      <div class="event-description">Joint strikes targeting Iranian nuclear facilities and IRGC command centers across Tehran, Isfahan, Qom, Karaj, and Kermanshah. Supreme Leader Khamenei and Ali Shamkhani confirmed killed. Strikes began less than 24 hours after Oman declared Geneva talks "within reach" — Iran had agreed to never stockpile enriched uranium with full IAEA verification.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">New York Times</span>
+          <div class="source-links">
+            <a class="source-link" href="https://www.nytimes.com" target="_blank" rel="noopener">↗ NYTimes.com</a>
+            <a class="source-link" href="https://www.bbc.com/news/world-middle-east" target="_blank" rel="noopener">↗ BBC News</a>
+            <a class="source-link" href="https://www.reuters.com" target="_blank" rel="noopener">↗ Reuters</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">MILITARY</span><span class="tag">IRAN</span><span class="tag">ISRAEL</span><span class="tag">US</span><span class="tag">DAY-1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-002 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Intelligence</span>
+        <span class="event-id">EVT-002</span>
+      </div>
+      <div class="event-title">NIC assessed regime change was impossible — before strikes began</div>
+      <div class="event-description">The National Intelligence Council concluded BEFORE Operation Epic Fury that military assault was unlikely to topple the Iranian regime. White House has not confirmed Trump saw the assessment before ordering strikes. The war was launched without an achievable strategic objective by the US government's own pre-war intelligence.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Washington Post</span>
+          <div class="source-links">
+            <a class="source-link" href="https://www.washingtonpost.com" target="_blank" rel="noopener">↗ WashingtonPost.com</a>
+            <a class="source-link" href="https://www.timesofisrael.com" target="_blank" rel="noopener">↗ Times of Israel</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:95%"></div></div>
+          <span class="confidence-pct">95%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">INTELLIGENCE</span><span class="tag">NIC</span><span class="tag">TRUMP</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-003 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Insurance / Shipping</span>
+        <span class="event-id">EVT-003</span>
+      </div>
+      <div class="event-title">Seven P&amp;I clubs cancel war risk coverage — Hormuz closed by actuaries</div>
+      <div class="event-description">Seven Protection &amp; Indemnity insurance clubs cancelled war risk coverage for Strait of Hormuz transit within 72 hours of strikes. Commercial tanker traffic collapsed to near zero. No physical blockade exists — three US carrier strike groups patrol the waterway. The mechanism that closed the Strait was actuarial, not military. Seven letters from seven insurance offices did what the Iranian navy could not.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Shanaka Perera @shanaka86</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/shanaka86" target="_blank" rel="noopener">↗ @shanaka86 on X</a>
+            <a class="source-link" href="https://lloydslist.maritimeintelligence.informa.com" target="_blank" rel="noopener">↗ Lloyd's List</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">INSURANCE</span><span class="tag">HORMUZ</span><span class="tag">SHIPPING</span><span class="tag">ACTUARIAL</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-004 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Infrastructure</span>
+        <span class="event-id">EVT-004</span>
+      </div>
+      <div class="event-title">$1.1B Qatar UEWR radar destroyed — confirmed by Planet Labs satellite</div>
+      <div class="event-description">AN/FPS-132 Block 5 Ballistic Missile Early Warning Radar at Al Udeid Air Base, Qatar confirmed destroyed by Iranian strikes. Independently verified by Planet Labs satellite imagery before their subsequent US-government-ordered 14-day imagery blackout imposed March 10.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Planet Labs (pre-blackout)</span>
+          <div class="source-links">
+            <a class="source-link" href="https://www.planet.com" target="_blank" rel="noopener">↗ Planet.com</a>
+            <a class="source-link" href="https://web.archive.org" target="_blank" rel="noopener">↗ Archive.org</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">QATAR</span><span class="tag">RADAR</span><span class="tag">PLANET-LABS</span><span class="tag">SATELLITE</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DAY 7 ═══════════════════════ -->
+<div class="day-block" id="day7">
+  <div class="day-header">
+    <div class="day-number">07</div>
+    <div class="day-info">
+      <div class="day-date">MARCH 6, 2026</div>
+      <div class="day-summary">Brent hits $92 — largest weekly gain since 1982. Kuwait force majeure. AWS data center struck. Lincoln visual blackout ongoing.</div>
+    </div>
+  </div>
+
+  <!-- EVT-005 -->
+  <div class="event-card" data-type="economic">
+    <div class="event-bar economic"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status economic">ECONOMIC</span>
+        <span class="event-category">Oil Markets — Historic</span>
+        <span class="event-id">EVT-005</span>
+      </div>
+      <div class="event-title">Brent hits $92 — largest weekly gain since records began in 1982</div>
+      <div class="event-description">Week's gain: 34.5%. Pre-war price: $72.87. WTI through $92 adding $12 in 9 hours Thursday. Brent hit $90 for first time in almost two years. Qatar energy minister says $150 possible. Goldman Sachs modeling sustained disruption scenarios. Deutsche Bank: jet fuel crack spreads comparable to 2005 hurricane spike that bankrupted Delta and Northwest Airlines.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Barchart / Investing.com</span>
+          <div class="source-links">
+            <a class="source-link" href="https://www.barchart.com/futures/quotes/CB*0/futures-prices" target="_blank" rel="noopener">↗ Barchart Brent</a>
+            <a class="source-link" href="https://www.investing.com/commodities/brent-oil" target="_blank" rel="noopener">↗ Investing.com</a>
+            <a class="source-link" href="https://oilprice.com/futures/brent/" target="_blank" rel="noopener">↗ OilPrice.com</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">OIL</span><span class="tag">BRENT</span><span class="tag">WTI</span><span class="tag">MARKETS</span><span class="tag">HISTORIC</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-006 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Production</span>
+        <span class="event-id">EVT-006</span>
+      </div>
+      <div class="event-title">Kuwait declares force majeure — 2.8M bbl/day production effectively zeroed</div>
+      <div class="event-description">Kuwait Petroleum Corporation declares force majeure. Storage full. Zero tankers loaded since February 28. Iran did not attack a single Kuwaiti oil facility. Insurance withdrawal and storage arithmetic completed it automatically. JPMorgan storage countdown completed on schedule: Iraq Day 6, Kuwait Day 18. UAE 16–19 days, Qatar 20 days, Saudi Arabia 36–65 days remaining.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Kuwait Petroleum Corp</span>
+          <div class="source-links">
+            <a class="source-link" href="https://www.kpc.com.kw" target="_blank" rel="noopener">↗ KPC.com.kw</a>
+            <a class="source-link" href="https://www.reuters.com/business/energy/" target="_blank" rel="noopener">↗ Reuters Energy</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">KUWAIT</span><span class="tag">FORCE-MAJEURE</span><span class="tag">PRODUCTION</span><span class="tag">STORAGE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-007 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Infrastructure — Historic First</span>
+        <span class="event-id">EVT-007</span>
+      </div>
+      <div class="event-title">AWS data center struck — first hyperscaler physically hit in wartime history</div>
+      <div class="event-description">Amazon Web Services confirmed "objects struck" at availability zone mec1-az2 in UAE. Fire, power cut, zone went dark. Jerusalem Post reports facility used by Israeli military. First time in history a major hyperscaler data center was physically struck during war. AWS, Azure, Google Cloud, and Oracle are all clustered in the same geographic corridor — now an active theater of war.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">AWS / Jerusalem Post</span>
+          <div class="source-links">
+            <a class="source-link" href="https://aws.amazon.com/message/12721/" target="_blank" rel="noopener">↗ AWS Incident</a>
+            <a class="source-link" href="https://www.jpost.com" target="_blank" rel="noopener">↗ Jerusalem Post</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:95%"></div></div>
+          <span class="confidence-pct">95%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">AWS</span><span class="tag">UAE</span><span class="tag">CLOUD</span><span class="tag">HISTORIC-FIRST</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-008 -->
+  <div class="event-card" data-type="unconfirmed">
+    <div class="event-bar unconfirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status unconfirmed">MONITORING</span>
+        <span class="event-category">Military — Visual Blackout</span>
+        <span class="event-id">EVT-008</span>
+      </div>
+      <div class="event-title">USS Abraham Lincoln — damage suppressed, visual blackout day 10+</div>
+      <div class="event-description">Iran claimed hit on Day 1. CENTCOM deleted acknowledgment tweet. Ship quietly repositioned to Mediterranean — zero images, zero crew interviews, zero press access for 10+ days. Former crew member @anthon7yandrews (USS Lincoln CVN-72, 1991 Gulf service) posted mast comparison images March 8 claiming burning carrier photo matches Lincoln's mast geometry. Grok refused to process the images.</div>
+      <div class="monitoring-note">10+ days with zero images of the most recognizable vessel in the US Navy is not consistent with an undamaged ship. Watch for: visual confirmation, crew interviews, Iranian proof-of-life for captured personnel.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">@anthon7yandrews (CVN-72 veteran)</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/anthon7yandrews" target="_blank" rel="noopener">↗ Thread on X</a>
+            <a class="source-link archived" href="https://web.archive.org" target="_blank" rel="noopener">↗ Archive (CENTCOM deleted tweet)</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill medium" style="width:65%"></div></div>
+          <span class="confidence-pct">65%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">USS-LINCOLN</span><span class="tag">SUPPRESSED</span><span class="tag">CVN-72</span><span class="tag">UNVERIFIED</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DAY 9–10 ═══════════════════════ -->
+<div class="day-block" id="day9">
+  <div class="day-header">
+    <div class="day-number">09</div>
+    <div class="day-info">
+      <div class="day-date">MARCH 8–9, 2026 — International Women's Day</div>
+      <div class="day-summary">Tehran under black sky. Iraq loses 3M bbl/day. Brent hits $118. Putin's sales pitch. Saudi embassy evacuated. Israeli officials panic.</div>
+    </div>
+  </div>
+
+  <!-- EVT-009 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Production</span>
+        <span class="event-id">EVT-009</span>
+      </div>
+      <div class="event-title">Iraq production collapses 70% — 3 million barrels per day lost</div>
+      <div class="event-description">Three independent sources confirm Iraq production fallen from 4.3M to 1.3M barrels/day — a 70% collapse. Storage arithmetic completed exactly as JPMorgan modeled. No Iraqi oil infrastructure was struck. Storage filled, no tankers loading, wells forced to shut in. Reservoir physics: forced shut-ins cause permanent formation damage — 10–30% reduction in long-term recovery rates even after reopening. Market pricing temporary disruption; physics pricing permanent destruction.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Three independent sources</span>
+          <div class="source-links">
+            <a class="source-link" href="https://www.reuters.com/business/energy/" target="_blank" rel="noopener">↗ Reuters Energy</a>
+            <a class="source-link" href="https://www.bloomberg.com/energy" target="_blank" rel="noopener">↗ Bloomberg Energy</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:95%"></div></div>
+          <span class="confidence-pct">95%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">IRAQ</span><span class="tag">PRODUCTION</span><span class="tag">RESERVOIR-DAMAGE</span><span class="tag">STORAGE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-010 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Humanitarian</span>
+        <span class="event-id">EVT-010</span>
+      </div>
+      <div class="event-title">Tehran wakes under black sky raining oil — 9 million people</div>
+      <div class="event-description">US-Israel struck oil tankers just outside Tehran. City of 9 million people woke to a black sky with oil rain. Environmental and health catastrophe. Psychologically decisive for the Iranian population — young Iranians who were protesting their government weeks ago are now fully unified against foreign attack. Any diplomatic off-ramp Iranian leadership could have sold to that population became politically impossible after this event.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Regional journalists / social media</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/search?q=Tehran+oil+sky" target="_blank" rel="noopener">↗ Search X</a>
+            <a class="source-link" href="https://web.archive.org" target="_blank" rel="noopener">↗ Archive.org</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:90%"></div></div>
+          <span class="confidence-pct">90%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">IRAN</span><span class="tag">TEHRAN</span><span class="tag">HUMANITARIAN</span><span class="tag">CIVILIAN</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-011 -->
+  <div class="event-card" data-type="economic">
+    <div class="event-bar economic"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status economic">ECONOMIC</span>
+        <span class="event-category">Oil Markets — Historic</span>
+        <span class="event-id">EVT-011</span>
+      </div>
+      <div class="event-title">Brent hits $118 Sunday futures — 52-week high breached, +27.48% single session</div>
+      <div class="event-description">BZ=F opened Sunday at $98.36, spiked to $110.78 (new 52-week high), continued to $118 by 10:41 PM EST. NY Harbor ULSD (diesel) futures hit $4.14 — up 13.42%. At 1:39 AM G7 announced potential 400M barrel coordinated reserve release (807K views on Kobeissi Letter). Oil dropped below $108. France subsequently said G7 "not there yet." Erik Townsend @ErikSTownsend: "$250+ oil entirely plausible in short term if Hormuz not restored this week."</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Yahoo Finance / Kobeissi Letter</span>
+          <div class="source-links">
+            <a class="source-link" href="https://finance.yahoo.com/quote/BZ%3DF/" target="_blank" rel="noopener">↗ BZ=F Yahoo Finance</a>
+            <a class="source-link" href="https://twitter.com/KobeissiLetter" target="_blank" rel="noopener">↗ @KobeissiLetter</a>
+            <a class="source-link" href="https://twitter.com/ErikSTownsend" target="_blank" rel="noopener">↗ @ErikSTownsend</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">OIL</span><span class="tag">$118</span><span class="tag">BRENT</span><span class="tag">DIESEL</span><span class="tag">G7</span><span class="tag">HISTORIC</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-012 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Geopolitical — Russia</span>
+        <span class="event-id">EVT-012</span>
+      </div>
+      <div class="event-title">Putin confirms Hormuz closure — it is a sales pitch for Russian crude</div>
+      <div class="event-description">Via Interfax March 9: Putin stated oil production linked to Hormuz "risks coming to complete halt as early as next month." Analysis (Shanaka Perera): Putin did not close the Strait — the mechanism was actuarial. His statement is not analysis, it is a sales pitch to every refiner scrambling for crude. Russia's shadow fleet of 900–1,200 vessels is now the infrastructure delivering alternative barrels. The Iran war is financing Russia's Ukraine campaign without Russia firing a single shot.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Interfax / Shanaka Perera</span>
+          <div class="source-links">
+            <a class="source-link" href="https://interfax.com" target="_blank" rel="noopener">↗ Interfax</a>
+            <a class="source-link" href="https://twitter.com/shanaka86" target="_blank" rel="noopener">↗ @shanaka86 analysis</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">RUSSIA</span><span class="tag">PUTIN</span><span class="tag">HORMUZ</span><span class="tag">STRATEGIC</span><span class="tag">UKRAINE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-013 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Diplomacy</span>
+        <span class="event-id">EVT-013</span>
+      </div>
+      <div class="event-title">US Embassy Riyadh evacuated — Saudi Arabia refuses to join war</div>
+      <div class="event-description">Lindsey Graham confirmed the American Embassy in Riyadh being evacuated due to sustained Iranian attacks. Graham publicly threatened Saudi Arabia for refusing to join military operations (4.1M views). Saudi reply via @Khanjar111 (170K views): "Saudi Arabia will not be tricked into entering a war started by Netanyahu only to be abandoned later by Washington politicians. The Kingdom will act in its own national interest."</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Lindsey Graham / @Khanjar111</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/LindseyGrahamSC" target="_blank" rel="noopener">↗ @LindseyGrahamSC</a>
+            <a class="source-link" href="https://twitter.com/Khanjar111" target="_blank" rel="noopener">↗ @Khanjar111 reply</a>
+            <a class="source-link" href="https://www.nytimes.com" target="_blank" rel="noopener">↗ NYT — State Dept ordered diplomats to leave</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">SAUDI-ARABIA</span><span class="tag">DIPLOMACY</span><span class="tag">EMBASSY</span><span class="tag">GRAHAM</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-014 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Diplomacy — Israel</span>
+        <span class="event-id">EVT-014</span>
+      </div>
+      <div class="event-title">Israeli officials leak off-ramp discussions to Washington Post — panic confirmed</div>
+      <div class="event-description">Senior Israeli officials discussing alternatives to Trump's "unconditional surrender" demand with Washington Post. Philip Pilkington: "Israeli officials had a magic conception of American power. Now that they see there are no magic beans they're realising the status quo is just constant drone and missile strikes." Talk of endgame is early — decision to stop attacks rests with Trump who continues to seek all-out victory.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Washington Post / Pilkington</span>
+          <div class="source-links">
+            <a class="source-link" href="https://www.washingtonpost.com" target="_blank" rel="noopener">↗ Washington Post</a>
+            <a class="source-link" href="https://twitter.com/philippilk" target="_blank" rel="noopener">↗ @philippilk analysis</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:95%"></div></div>
+          <span class="confidence-pct">95%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">ISRAEL</span><span class="tag">OFF-RAMP</span><span class="tag">DIPLOMACY</span><span class="tag">WASHINGTON-POST</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DAY 11 ═══════════════════════ -->
+<div class="day-block" id="day11">
+  <div class="day-header">
+    <div class="day-number">11</div>
+    <div class="day-info">
+      <div class="day-date">MARCH 10, 2026</div>
+      <div class="day-summary">Mines deployed in Strait. Planet Labs blinded. Energy Secretary deletes fake tanker post. Market manipulation confirmed. Largest supply shock in history. $84 oil.</div>
+    </div>
+  </div>
+
+  <!-- EVT-015 -->
+  <div class="event-card" data-type="suppressed">
+    <div class="event-bar suppressed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status suppressed">SUPPRESSED</span>
+        <span class="event-category">Market Manipulation — Deleted Post</span>
+        <span class="event-id">EVT-015</span>
+      </div>
+      <div class="event-title">Energy Secretary Wright posts fake tanker transit — deletes after oil drops</div>
+      <div class="event-description">US Energy Secretary Chris Wright posted that the Navy was escorting an oil tanker through the Strait of Hormuz. Oil prices dropped on the news. Post subsequently deleted. MarineTraffic simultaneously confirmed GPS spoofing near Ras Al Khaimah creating artificial vessel tracks toward Hormuz. Iranian FM Araghchi responded directly: "US officials are posting fake news to manipulate markets." Allegation circulating that Wright had pre-positioned oil put options before the post.</div>
+      <div class="monitoring-note">Potential insider trading by cabinet official. Pattern: post fake news → oil drops → options print → delete post. Iran FM confirmed manipulation on the record.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">First Squawk / MarineTraffic</span>
+          <div class="source-links">
+            <a class="source-link deleted" href="#" target="_blank" rel="noopener">✕ Wright post (DELETED)</a>
+            <a class="source-link" href="https://twitter.com/FirstSquawk" target="_blank" rel="noopener">↗ @FirstSquawk</a>
+            <a class="source-link" href="https://twitter.com/MarineTraffic" target="_blank" rel="noopener">↗ @MarineTraffic GPS spoofing</a>
+            <a class="source-link" href="https://twitter.com/araghchi" target="_blank" rel="noopener">↗ Iran FM @araghchi</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill medium" style="width:90%"></div></div>
+          <span class="confidence-pct">90%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">MANIPULATION</span><span class="tag">DELETED</span><span class="tag">WRIGHT</span><span class="tag">ENERGY-SECRETARY</span><span class="tag">INSIDER-TRADING</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-016 -->
+  <div class="event-card" data-type="suppressed">
+    <div class="event-bar suppressed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status suppressed">SUPPRESSED</span>
+        <span class="event-category">Intelligence Blackout</span>
+        <span class="event-id">EVT-016</span>
+      </div>
+      <div class="event-title">Planet Labs imposes 14-day imagery delay on entire Middle East theater</div>
+      <div class="event-description">After consultation with the US government, Planet Labs announced an unprecedented 14-day delay on all new imagery (PlanetScope, SkySat, Pelican, Tanager) for an expanded Area of Interest covering all of Iran, nearby allied bases, Gulf States, and existing conflict zones. Data is still collected but held in a "temporal buffer." Effective commercial satellite intelligence blackout over the entire theater of war.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Planet Labs / STRATCOM Bureau</span>
+          <div class="source-links">
+            <a class="source-link" href="https://www.planet.com" target="_blank" rel="noopener">↗ Planet.com</a>
+            <a class="source-link" href="https://twitter.com/OSPSF" target="_blank" rel="noopener">↗ @OSPSF STRATCOM Bureau</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:100%"></div></div>
+          <span class="confidence-pct">100%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">PLANET-LABS</span><span class="tag">BLACKOUT</span><span class="tag">CENSORSHIP</span><span class="tag">SATELLITE</span><span class="tag">US-GOVERNMENT</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-017 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Military — Escalation</span>
+        <span class="event-id">EVT-017</span>
+      </div>
+      <div class="event-title">Iran deploys naval mines in Strait of Hormuz shipping lane</div>
+      <div class="event-description">CBS News via Jennifer Jacobs: US intelligence confirms Iran deploying mines in the Strait shipping lane using small craft carrying 2–3 mines each. Iranian mine stockpile estimated at 2,000–6,000 mines (Iranian, Chinese, Russian-made variants). This transitions Hormuz from actuarial closure to physical danger. No insurance can be written for an active minefield at any premium. France reportedly preparing a military mission specifically to reopen shipping lanes.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">CBS News / Jennifer Jacobs</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/JenniferJJacobs" target="_blank" rel="noopener">↗ @JenniferJJacobs — 358K views</a>
+            <a class="source-link" href="https://www.cbsnews.com" target="_blank" rel="noopener">↗ CBSNews.com</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:95%"></div></div>
+          <span class="confidence-pct">95%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">MINES</span><span class="tag">HORMUZ</span><span class="tag">IRAN</span><span class="tag">ESCALATION</span><span class="tag">CBS</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-018 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Humanitarian — Israel</span>
+        <span class="event-id">EVT-018</span>
+      </div>
+      <div class="event-title">Israel in partial lockdown — Hezbollah missiles hitting Tel Aviv without sirens</div>
+      <div class="event-description">BBC correspondent Kasra Naji from Tel Aviv (208K views): Israel in partial lockdown, streets empty, shops closed, situation becoming unbearable. Critically: large Hezbollah missiles hitting Tel Aviv without warning sirens activating. This is unprecedented — indicating Iron Dome detection failure, system overwhelm, or deliberate suppression of alerts. Full damage assessment unavailable due to Planet Labs blackout.</div>
+      <div class="monitoring-note">Warning system failure in Tel Aviv requires independent confirmation. Missiles arriving without sirens signals a fundamental shift in Israel's defensive posture.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">BBC / Kasra Naji</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/SprinterPress" target="_blank" rel="noopener">↗ @SprinterPress — 208K views</a>
+            <a class="source-link" href="https://www.bbc.com/news/world-middle-east" target="_blank" rel="noopener">↗ BBC Middle East</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:90%"></div></div>
+          <span class="confidence-pct">90%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">ISRAEL</span><span class="tag">TEL-AVIV</span><span class="tag">LOCKDOWN</span><span class="tag">IRON-DOME</span><span class="tag">BBC</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-019 -->
+  <div class="event-card" data-type="economic">
+    <div class="event-bar economic"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status economic">ECONOMIC</span>
+        <span class="event-category">Supply Shock — Historic</span>
+        <span class="event-id">EVT-019</span>
+      </div>
+      <div class="event-title">Supply shock confirmed as largest in recorded history — 4× all previous combined</div>
+      <div class="event-description">Iran FM Araghchi published comparative table: Current Hormuz blockade 2026 ~20M bbl/day lost. Iranian Revolution 1978: 5.6M. Yom Kippur Embargo 1973: 4.4M. Iraq-Kuwait War 1990: 4.3M. Iran-Iraq War 1980: 4.0M. Russia-Ukraine 2022: 1–3M. Current crisis is approximately 4× larger than any previous supply shock in recorded history. Brent was trading at ~$85 on Day 11. The gap between physical reality and paper price is the largest sustained market manipulation in oil history.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Iran FM Araghchi / IEA historical data</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/araghchi" target="_blank" rel="noopener">↗ @araghchi — supply shock table</a>
+            <a class="source-link" href="https://www.iea.org/data-and-statistics" target="_blank" rel="noopener">↗ IEA Historical Data</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:95%"></div></div>
+          <span class="confidence-pct">95%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">SUPPLY-SHOCK</span><span class="tag">HISTORIC</span><span class="tag">OIL</span><span class="tag">MANIPULATION</span><span class="tag">$84</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-020 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Military — Second Order</span>
+        <span class="event-id">EVT-020</span>
+      </div>
+      <div class="event-title">All USFK THAAD launchers shipped to Middle East — South Korea left defenseless</div>
+      <div class="event-description">Korean media reports all US Forces Korea THAAD batteries shipped to Middle East. Radar still in place but all launchers gone. The US has stripped an allied nation's missile defense to replace what Iran destroyed in theater. South Korea is now without THAAD protection against North Korean ballistic missiles. North Korea is observing this in real time.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">@saber_k086 / Washington Post</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/saber_k086" target="_blank" rel="noopener">↗ @saber_k086 — 365K views</a>
+            <a class="source-link" href="https://www.washingtonpost.com" target="_blank" rel="noopener">↗ Washington Post</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:90%"></div></div>
+          <span class="confidence-pct">90%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">THAAD</span><span class="tag">SOUTH-KOREA</span><span class="tag">NORTH-KOREA</span><span class="tag">MILITARY</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-021 -->
+  <div class="event-card" data-type="confirmed">
+    <div class="event-bar confirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status confirmed">CONFIRMED</span>
+        <span class="event-category">Military — Iran Escalation</span>
+        <span class="event-id">EVT-021</span>
+      </div>
+      <div class="event-title">Iran announces 1-ton+ warheads only — radar corridor to Israel being systematically cleared</div>
+      <div class="event-description">IRGC Aerospace Force commander Majid Mousavi: Iran will only launch missiles with warheads exceeding one ton going forward. Frequency, scale, and scope of missile waves will increase. Patricia Marins confirms systematic radar elimination campaign: THAAD Jordan, THAAD Al Ruwais UAE, THAAD Al Sader UAE, THAAD Prince Sultan Base Saudi Arabia, and Ballistic Missile EW Radar Qatar — all destroyed. Arrow interceptor stocks assessed as running low.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">The Cradle / Patricia Marins</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/TheCradleMedia" target="_blank" rel="noopener">↗ @TheCradleMedia</a>
+            <a class="source-link" href="https://twitter.com/pati_marins64" target="_blank" rel="noopener">↗ @pati_marins64</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill" style="width:95%"></div></div>
+          <span class="confidence-pct">95%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">IRAN</span><span class="tag">MISSILES</span><span class="tag">IRGC</span><span class="tag">RADAR-CORRIDOR</span><span class="tag">ISRAEL</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-022 -->
+  <div class="event-card" data-type="unconfirmed">
+    <div class="event-bar unconfirmed"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status unconfirmed">MONITORING</span>
+        <span class="event-category">Intelligence — Israel</span>
+        <span class="event-id">EVT-022</span>
+      </div>
+      <div class="event-title">Unit 8200 reportedly struck — Hasbara bot activity declining as indirect indicator</div>
+      <div class="event-description">Unconfirmed reports that Iran struck Unit 8200 — Israel's elite cyber intelligence unit responsible for Stuxnet, Pegasus, and coordinated online influence operations. Indirect indicator: observable decline in volume and coherence of coordinated pro-Israel social media messaging since the reported strike date. No official Israeli acknowledgment.</div>
+      <div class="monitoring-note">Watch for: continued decline in coordinated pro-Israel social media activity, Israeli acknowledgment of intelligence infrastructure damage, Iranian claims with specifics.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources</div>
+        <div class="source-row">
+          <span class="source-name">Unverified / observable activity</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/search?q=Unit+8200" target="_blank" rel="noopener">↗ Search X</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE</span>
+          <div class="confidence-track"><div class="confidence-fill low" style="width:35%"></div></div>
+          <span class="confidence-pct">35%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">UNIT-8200</span><span class="tag">ISRAEL</span><span class="tag">CYBER</span><span class="tag">UNVERIFIED</span><span class="tag">LOW-CONFIDENCE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVT-023 -->
+  <div class="event-card" data-type="economic" id="evt-023">
+    <div class="event-bar economic"></div>
+    <div class="event-body">
+      <div class="event-meta">
+        <span class="event-status economic">ECONOMIC</span>
+        <span class="event-category">Market Manipulation — Analysis</span>
+        <span class="event-id">EVT-023</span>
+      </div>
+      <div class="event-title">Oil drops $34 from $118 to $84 on no fundamental change — evidence consistent with active manipulation</div>
+      <div class="event-description">From Sunday night peak of $118, Brent fell to ~$84 by Monday afternoon March 10. No ceasefire. No insurance resumption. No physical supply restoration. Iraq still at 30% production. Mines being actively deployed in the Strait. The largest supply shock in recorded history ongoing and accelerating. What changed: a G7 reserve announcement that France immediately walked back, a deleted official post claiming tanker transit that MarineTraffic simultaneously confirmed was GPS-spoofed, and heavy futures market activity with no fundamental basis. The evidence is consistent with coordinated market intervention to suppress oil prices. Every professional market participant covering this conflict has noted the disconnect between the physical supply reality and the paper price.</div>
+      <div class="monitoring-note">This is analysis, not assertion. The evidence documented in EVT-015 and EVT-016 — deleted official posts, GPS spoofing, Planet Labs blackout imposed simultaneously — is consistent with coordinated suppression. The market will eventually price physical reality. The spring is being compressed.</div>
+      <div class="event-sources">
+        <div class="sources-label">Sources — Evidence for manipulation thesis</div>
+        <div class="source-row">
+          <span class="source-name">Multiple analysts</span>
+          <div class="source-links">
+            <a class="source-link" href="https://twitter.com/KobeissiLetter" target="_blank" rel="noopener">↗ @KobeissiLetter</a>
+            <a class="source-link" href="https://twitter.com/ErikSTownsend" target="_blank" rel="noopener">↗ @ErikSTownsend</a>
+            <a class="source-link" href="https://twitter.com/BCResource" target="_blank" rel="noopener">↗ @BCResource — "heavy manipulation confirmed"</a>
+            <a class="source-link" href="https://twitter.com/araghchi" target="_blank" rel="noopener">↗ Iran FM — "US posting fake news to move markets"</a>
+            <a class="source-link" href="https://twitter.com/MarineTraffic" target="_blank" rel="noopener">↗ @MarineTraffic — GPS spoofing confirmed</a>
+          </div>
+        </div>
+        <div class="confidence-bar">
+          <span class="confidence-label">CONFIDENCE — manipulation is occurring</span>
+          <div class="confidence-track"><div class="confidence-fill medium" style="width:85%"></div></div>
+          <span class="confidence-pct">85%</span>
+        </div>
+      </div>
+      <div class="event-footer">
+        <div class="event-tags"><span class="tag">MANIPULATION</span><span class="tag">OIL</span><span class="tag">$84</span><span class="tag">MARKETS</span><span class="tag">ANALYSIS</span><span class="tag">GPS-SPOOFING</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end day11 -->
+</div><!-- end timeline -->
+</div><!-- end main -->
+
+<footer class="site-footer">
+  <div>HORMUZ ARCHIVE — Built March 10, 2026 — Open source intelligence, publicly sourced</div>
+  <div style="font-style:italic;">History is written by winners. This record was written while it happened.</div>
+</footer>
+
+<script>
+  function filterEvents(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.event-card').forEach(card => {
+      card.classList.toggle('hidden', type !== 'all' && card.dataset.type !== type);
+    });
+  }
+
+  function scrollToDay(id, el) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.day-link').forEach(l => l.classList.remove('active'));
+    el?.classList.add('active');
+  }
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.style.animationPlayState = 'running'; });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.event-card').forEach(card => {
+    card.style.animationPlayState = 'paused';
+    observer.observe(card);
+  });
+
+  // Live Brent Crude price — via public Yahoo Finance proxy
+  async function fetchBrent() {
+    try {
+      const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1m&range=1d', {
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      const meta = data?.chart?.result?.[0]?.meta;
+      if (meta) {
+        const price = meta.regularMarketPrice?.toFixed(2);
+        const prev  = meta.chartPreviousClose?.toFixed(2);
+        const change = (meta.regularMarketPrice - meta.chartPreviousClose).toFixed(2);
+        const pct   = ((change / meta.chartPreviousClose) * 100).toFixed(2);
+        const dir   = change >= 0 ? '▲' : '▼';
+        const col   = change >= 0 ? 'var(--green-bright)' : 'var(--red)';
+        document.getElementById('brent-price').textContent = `$${price}`;
+        const chEl = document.getElementById('brent-change');
+        chEl.innerHTML = `<span style="color:${col}">${dir} ${Math.abs(change)} (${Math.abs(pct)}%)</span>`;
+      }
+    } catch(e) {
+      document.getElementById('brent-price').textContent = '—';
+      document.getElementById('brent-change').textContent = 'unavailable';
+    }
+  }
+  fetchBrent();
+  setInterval(fetchBrent, 5 * 60 * 1000); // refresh every 5 minutes
+  const warStart = new Date('2026-02-28T00:00:00Z');
+  const now = new Date();
+  const conflictDay = Math.floor((now - warStart) / (1000 * 60 * 60 * 24)) + 1;
+  const dayEl = document.getElementById('conflict-day');
+  if (dayEl) dayEl.textContent = conflictDay;
+
+  // Vessel count — MarineTraffic free tier blocks CORS API calls
+  // Display documented estimate with tooltip explaining methodology
+  const vesselEl = document.getElementById('vessel-count');
+  if (vesselEl) {
+    vesselEl.textContent = '↓ ~90% vs pre-war';
+    vesselEl.title = 'Pre-war: ~18-22 tankers/day through Hormuz. Insurance withdrawal (7 P&I clubs, Mar 1) collapsed commercial traffic to ~10% of normal levels. Source: Lloyd\'s List, MarineTraffic reports Mar 1-10 2026.';
+  }
+</script>
+</body>
+</html>

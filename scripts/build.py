@@ -119,6 +119,7 @@ for rec in raw_events:
         "sources":     sources,
         "confidence":  pct,
         "tags":        f.get("Tags", []),
+        "date":        f.get("Date", ""),
         "day":         int(f.get("Conflict Day") or 0),
     })
 

@@ -6,6 +6,7 @@ into index.html. JavaScript in the page renders cards dynamically from the JSON.
 
 import json, os, sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
@@ -143,5 +144,10 @@ if not data_script:
 
 data_script.string = json.dumps(archive_data, ensure_ascii=False, separators=(",", ":"))
 
+ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+ts_el = soup.find("span", {"id": "build-timestamp"})
+if ts_el:
+    ts_el.string = ts
+
 index_path.write_text(str(soup))
-print(f"\nRebuilt index.html — {len(events_data)} events across {len(sorted_days)} days.")
+print(f"\nRebuilt index.html — {len(events_data)} events across {len(sorted_days)} days. Timestamp: {ts}")

@@ -6,7 +6,7 @@ into index.html. JavaScript in the page renders cards dynamically from the JSON.
 
 import json, os, sys
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -82,13 +82,19 @@ sorted_days = sorted(events_by_day.keys())
 
 # ── Build JSON data structure ─────────────────────────────────────────────────
 
+CONFLICT_START = datetime(2026, 2, 28)
+
+def auto_date_display(day_num):
+    d = CONFLICT_START + timedelta(days=day_num - 1)
+    return d.strftime("%B %-d, %Y").upper()
+
 days_data = []
 for day_num in sorted_days:
     meta = day_summaries.get(str(day_num), {})
     days_data.append({
         "day":         day_num,
         "id":          f"day{day_num}",
-        "dateDisplay": meta.get("date_display", f"DAY {day_num}"),
+        "dateDisplay": meta.get("date_display") or auto_date_display(day_num),
         "summary":     meta.get("summary", ""),
     })
 

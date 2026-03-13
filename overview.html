@@ -310,6 +310,139 @@
     letter-spacing: 0.1em;
   }
 
+  /* ── Vertical chronological timeline ── */
+  .vtl-wrap {
+    position: relative;
+    max-height: 640px;
+    overflow-y: auto;
+    padding: 4px 0 16px;
+  }
+
+  .vtl-spine {
+    position: absolute;
+    left: 50%;
+    top: 0; bottom: 0;
+    width: 1px;
+    transform: translateX(-50%);
+    background: linear-gradient(to bottom, transparent, var(--border-bright) 3%, var(--border-bright) 97%, transparent);
+    pointer-events: none;
+  }
+
+  .vtl-entry {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    position: relative;
+  }
+
+  .vtl-half { flex: 1; min-width: 0; }
+
+  .vtl-dot-col {
+    flex: 0 0 44px;
+    display: flex;
+    justify-content: center;
+    padding-top: 11px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .vtl-dot {
+    border-radius: 50%;
+    border: 2px solid;
+    background: var(--bg);
+    flex-shrink: 0;
+    transition: box-shadow 0.2s;
+  }
+
+  .vtl-dot.milestone { box-shadow: 0 0 10px; }
+
+  .vtl-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    font-size: 11px;
+  }
+
+  .vtl-entry.vtl-left .vtl-card {
+    border-left-width: 1px;
+    border-right-width: 3px;
+    margin-right: 6px;
+  }
+
+  .vtl-entry.vtl-right .vtl-card { margin-left: 6px; }
+
+  .vtl-card:hover, .vtl-card.open { background: rgba(255,255,255,0.025); }
+
+  .vtl-card.milestone { background: rgba(255,255,255,0.015); }
+
+  .vtl-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+  }
+
+  .vtl-entry.vtl-left .vtl-meta { justify-content: flex-end; }
+
+  .vtl-pill {
+    font-size: 7px;
+    letter-spacing: 0.12em;
+    padding: 2px 5px;
+    border: 1px solid;
+    display: inline-block;
+    text-transform: uppercase;
+  }
+
+  .vtl-daydate {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+
+  .vtl-title {
+    font-size: 10px;
+    color: var(--text-bright);
+    line-height: 1.5;
+    margin-bottom: 3px;
+  }
+
+  .vtl-entry.vtl-left .vtl-title,
+  .vtl-entry.vtl-left .vtl-daydate,
+  .vtl-entry.vtl-left .vtl-conf { text-align: right; }
+
+  .vtl-card.milestone .vtl-title { font-size: 11px; color: var(--text-bright); font-weight: 700; }
+
+  .vtl-conf {
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .vtl-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    text-align: left;
+    display: none;
+  }
+
+  .vtl-expand {
+    font-size: 8px;
+    color: var(--text-dim);
+    margin-top: 5px;
+    letter-spacing: 0.08em;
+  }
+
+  .vtl-entry.vtl-left .vtl-expand { text-align: right; }
+  .vtl-card.open .vtl-expand { color: var(--amber); }
+
   @media (max-width: 900px) {
     .chart-row.two-col { grid-template-columns: 1fr; }
     .stat-strip { grid-template-columns: repeat(2, 1fr); }
@@ -371,10 +504,29 @@
 
   <div class="chart-grid">
 
-    <!-- 1. Conflict Timeline -->
+    <!-- 1. Vertical Chronological Timeline -->
     <div class="chart-panel">
       <div class="chart-panel-header">
         <div class="chart-panel-label">Chart 01</div>
+        <div class="chart-panel-title">CHRONOLOGICAL EVENT RECORD — DAY 1 TO PRESENT</div>
+        <div class="chart-panel-subtitle">All archived events in conflict order. Node size = confidence. Border color = status. Large nodes = milestone events (≥95% confidence). Click any card to expand description.</div>
+      </div>
+      <div class="vtl-wrap" id="vert-timeline">
+        <!-- populated by JS -->
+      </div>
+      <div class="chart-legend" style="margin-top:16px;">
+        <div class="legend-item"><div class="legend-dot" style="background:#6aaa7a"></div>Confirmed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#d4a843"></div>Monitoring</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div>Suppressed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7a9ec0"></div>Economic</div>
+        <div class="legend-item" style="margin-left:auto;font-size:9px;color:var(--text-dim);">⬤ large node = milestone (≥95% confidence)</div>
+      </div>
+    </div>
+
+    <!-- 2. Scatter Timeline -->
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-label">Chart 02</div>
         <div class="chart-panel-title">CONFLICT TIMELINE — EVENTS BY DAY &amp; CATEGORY</div>
         <div class="chart-panel-subtitle">Each point is one archived event. Position = conflict day. Lane = category. Size = confidence. Color = status. Hover for title.</div>
       </div>
@@ -389,13 +541,13 @@
       </div>
     </div>
 
-    <!-- Row 2: Brent + Status -->
+    <!-- Row 3: Brent + Status -->
     <div class="chart-row two-col">
 
-      <!-- 2. Brent Crude -->
+      <!-- 3. Brent Crude -->
       <div class="chart-panel">
         <div class="chart-panel-header">
-          <div class="chart-panel-label">Chart 02</div>
+          <div class="chart-panel-label">Chart 03</div>
           <div class="chart-panel-title">BRENT CRUDE — DAY-BY-DAY PRICE TRAJECTORY</div>
           <div class="chart-panel-subtitle">Pre-war $72.87 → Day 9 peak $118 → suppressed to ~$84–96 with largest supply shock in history ongoing. Shaded region = analyst-assessed expected range. Current: <span id="brent-now" style="color:var(--amber)">—</span></div>
         </div>
@@ -404,12 +556,12 @@
         </div>
       </div>
 
-      <!-- 3. Status Breakdown -->
+      <!-- 4. Status Breakdown -->
       <div class="chart-panel">
         <div class="chart-panel-header">
-          <div class="chart-panel-label">Chart 03</div>
+          <div class="chart-panel-label">Chart 04</div>
           <div class="chart-panel-title">EVENT STATUS BREAKDOWN</div>
-          <div class="chart-panel-subtitle">Distribution of <span id="total-events-label">—</span> archived events by verification status.</div>
+          <div class="chart-panel-subtitle">Live count from archive JSON. Updates automatically on rebuild.</div>
         </div>
         <div class="chart-wrap" style="height:220px;">
           <canvas id="statusChart"></canvas>
@@ -419,12 +571,12 @@
 
     </div>
 
-    <!-- 4. Supply Shock Comparison -->
+    <!-- 5. Supply Shock Comparison -->
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-label">Chart 04</div>
+        <div class="chart-panel-label">Chart 05</div>
         <div class="chart-panel-title">SUPPLY SHOCK — HISTORICAL COMPARISON</div>
-        <div class="chart-panel-subtitle">Daily barrels removed from global supply at peak disruption. Source: Iran FM Araghchi comparative data (EVT-019), IEA historical records.</div>
+        <div class="chart-panel-subtitle">Million barrels per day removed from global supply at peak disruption. Source: Iran FM Araghchi comparative data (EVT-019), IEA historical records.</div>
       </div>
       <div class="chart-wrap" style="height:240px;">
         <canvas id="supplyChart"></canvas>
@@ -546,15 +698,103 @@
 
     // Update stat strip
     document.getElementById('s-total').textContent = events.length;
-    document.getElementById('total-events-label').textContent = events.length;
 
+    renderVertTimeline(events);
     renderTimeline(events);
     renderStatus(events);
     renderBrent();
     renderSupply();
   }
 
-  // ── Chart 1: Conflict Timeline ────────────────────────────────────────────
+  // ── Utility: escape HTML ──────────────────────────────────────────────────
+  function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Chart 01: Vertical Chronological Timeline ─────────────────────────────
+  function renderVertTimeline(events) {
+    var container = document.getElementById('vert-timeline');
+    if (!container) return;
+
+    var sorted = events.slice().sort(function(a, b) {
+      if (a.day !== b.day) return a.day - b.day;
+      return (a.eventId || '').localeCompare(b.eventId || '');
+    });
+
+    var STATUS_COLORS = {
+      confirmed:  '#6aaa7a',
+      economic:   '#7a9ec0',
+      suppressed: '#c0392b',
+      monitoring: '#d4a843',
+    };
+
+    function dotColor(type) {
+      return STATUS_COLORS[(type || '').toLowerCase()] || STATUS_COLORS.monitoring;
+    }
+
+    function dotSize(conf) {
+      if (conf == null) return 10;
+      if (conf >= 95) return 20;
+      return Math.max(8, Math.min(16, 8 + (conf / 100) * 8));
+    }
+
+    function fmtDate(dateStr) {
+      if (!dateStr) return '';
+      var m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return '';
+      var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      return months[parseInt(m[2], 10) - 1] + ' ' + parseInt(m[3], 10) + ', ' + m[1];
+    }
+
+    var html = '<div class="vtl-spine"></div>';
+
+    sorted.forEach(function(ev, i) {
+      var isRight = i % 2 === 0;
+      var side = isRight ? 'vtl-right' : 'vtl-left';
+      var color = dotColor(ev.type);
+      var conf = ev.confidence;
+      var isMilestone = conf != null && conf >= 95;
+      var size = dotSize(conf);
+      var dotStyle = 'width:' + size + 'px;height:' + size + 'px;border-color:' + color + ';' +
+        (isMilestone ? 'box-shadow:0 0 12px ' + color + ';' : '');
+      var pillStyle = 'color:' + color + ';border-color:' + color + ';';
+      var dateLabel = fmtDate(ev.date);
+      var cardClass = 'vtl-card' + (isMilestone ? ' milestone' : '');
+      var dotClass = 'vtl-dot' + (isMilestone ? ' milestone' : '');
+      var metaRight = '<span class="vtl-daydate">DAY ' + ev.day + (dateLabel ? ' · ' + dateLabel : '') + '</span>' +
+        '<span class="vtl-pill" style="' + pillStyle + '">' + (ev.type || '').toUpperCase() + '</span>';
+      var metaLeft = '<span class="vtl-pill" style="' + pillStyle + '">' + (ev.type || '').toUpperCase() + '</span>' +
+        '<span class="vtl-daydate">DAY ' + ev.day + (dateLabel ? ' · ' + dateLabel : '') + '</span>';
+      var cardInner =
+        '<div class="vtl-meta">' + (isRight ? metaRight : metaLeft) + '</div>' +
+        '<div class="vtl-title">' + escHtml(ev.title || '') + '</div>' +
+        (conf != null ? '<div class="vtl-conf">' + conf + '% confidence</div>' : '') +
+        (ev.description ? '<div class="vtl-desc">' + escHtml(ev.description) + '</div>' : '') +
+        '<div class="vtl-expand">[+ expand]</div>';
+      var dot = '<div class="vtl-dot-col"><div class="' + dotClass + '" style="' + dotStyle + '"></div></div>';
+      var card = '<div class="' + cardClass + '" onclick="vtlToggle(this)">' + cardInner + '</div>';
+      if (isRight) {
+        html += '<div class="vtl-entry ' + side + '"><div class="vtl-half"></div>' + dot +
+          '<div class="vtl-half">' + card + '</div></div>';
+      } else {
+        html += '<div class="vtl-entry ' + side + '"><div class="vtl-half">' + card + '</div>' + dot +
+          '<div class="vtl-half"></div></div>';
+      }
+    });
+
+    container.innerHTML = html;
+  }
+
+  window.vtlToggle = function(card) {
+    var isOpen = card.classList.contains('open');
+    card.classList.toggle('open', !isOpen);
+    var desc = card.querySelector('.vtl-desc');
+    if (desc) desc.style.display = isOpen ? 'none' : 'block';
+    var expand = card.querySelector('.vtl-expand');
+    if (expand) expand.textContent = isOpen ? '[+ expand]' : '[– collapse]';
+  };
+
+  // ── Chart 02: Conflict Timeline scatter ──────────────────────────────────
   function renderTimeline(events) {
     // Pass 1: group events by (day, lane) so we can evenly spread y-positions
     var groups = {};
@@ -706,7 +946,7 @@
     });
   }
 
-  // ── Chart 2: Brent Crude ──────────────────────────────────────────────────
+  // ── Chart 03: Brent Crude ────────────────────────────────────────────────
   function renderBrent() {
     // Price series — Day 10 shows $119.50 WTI-equivalent peak before the crash
     // The cliff from Day 10 → Day 11 ($119.50 → $84) makes the manipulation visible
@@ -925,6 +1165,28 @@
     var labels = ['Confirmed', 'Economic', 'Monitoring', 'Suppressed'];
     var values = [counts.confirmed, counts.economic, counts.unconfirmed, counts.suppressed];
     var colors = [C.confirmed, C.economic, C.monitoring, C.suppressed];
+    var total = events.length;
+
+    // Inline plugin to draw total count in doughnut center
+    var centerLabelPlugin = {
+      id: 'centerLabel',
+      afterDraw: function(chart) {
+        var ctx = chart.ctx;
+        var cx = (chart.chartArea.left + chart.chartArea.right) / 2;
+        var cy = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = C.textBright;
+        ctx.font = "700 24px 'Space Mono', monospace";
+        ctx.fillText(total, cx, cy - 9);
+        ctx.fillStyle = C.textDim;
+        ctx.font = "400 8px 'Space Mono', monospace";
+        ctx.letterSpacing = '0.12em';
+        ctx.fillText('EVENTS', cx, cy + 10);
+        ctx.restore();
+      }
+    };
 
     new Chart(document.getElementById('statusChart'), {
       type: 'doughnut',
@@ -938,6 +1200,7 @@
           hoverOffset: 6,
         }]
       },
+      plugins: [centerLabelPlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -947,7 +1210,7 @@
           tooltip: {
             callbacks: {
               label: function(ctx) {
-                var pct = ((ctx.parsed / events.length) * 100).toFixed(0);
+                var pct = (total ? (ctx.parsed / total) * 100 : 0).toFixed(0);
                 return '  ' + ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
               }
             },
@@ -992,13 +1255,21 @@
         labels: crises.map(function(c) { return c.label.split('\n'); }),
         datasets: [{
           data: crises.map(function(c) { return c.mbpd; }),
-          backgroundColor: crises.map(function(c) {
-            return c.highlight ? C.amber + 'dd' : C.textDim + '44';
-          }),
-          borderColor: crises.map(function(c) {
-            return c.highlight ? C.amber : C.borderBright;
-          }),
-          borderWidth: crises.map(function(c) { return c.highlight ? 2 : 1; }),
+          backgroundColor: function(ctx) {
+            if (ctx.dataIndex === 0) {
+              var chart = ctx.chart;
+              var g = chart.ctx.createLinearGradient(0, 0, chart.width, 0);
+              g.addColorStop(0,   C.amber + 'ee');
+              g.addColorStop(0.6, C.red   + 'cc');
+              g.addColorStop(1,   C.red   + 'aa');
+              return g;
+            }
+            return C.textDim + '44';
+          },
+          borderColor: function(ctx) {
+            return ctx.dataIndex === 0 ? C.red : C.borderBright;
+          },
+          borderWidth: function(ctx) { return ctx.dataIndex === 0 ? 2 : 1; },
           borderRadius: 2,
         }]
       },
@@ -1029,7 +1300,7 @@
                 borderWidth: 1,
                 borderDash: [4, 4],
                 label: {
-                  content: 'sum of all prior\n(' + (5.6+4.4+4.3+4.0+2.0).toFixed(1) + 'M)',
+                  content: ['sum of all prior', '(' + (5.6+4.4+4.3+4.0+2.0).toFixed(1) + 'M)'],
                   display: true,
                   position: 'center',
                   color: C.red,
@@ -1037,6 +1308,16 @@
                   backgroundColor: 'transparent',
                   xAdjust: 4,
                 }
+              },
+              ongoingLabel: {
+                type: 'label',
+                xValue: 10,
+                yValue: 0,
+                content: ['ONGOING — estimated'],
+                color: C.textBright,
+                font: { family: C.mono, size: 8, weight: '700' },
+                textAlign: 'center',
+                backgroundColor: 'transparent',
               }
             }
           }
@@ -1053,7 +1334,7 @@
             },
             title: {
               display: true,
-              text: 'Million barrels per day removed from global supply',
+              text: 'Million Barrels Per Day Removed from Global Supply at Peak Disruption',
               color: C.textDim,
               font: { family: C.mono, size: 9 },
               padding: { top: 8 },

@@ -99,12 +99,24 @@ for day_num in sorted_days:
     })
 
 events_data = []
+skipped = []
 for rec in raw_events:
     f       = rec.get("fields", {})
     status  = f.get("Status", "confirmed")
     conf    = f.get("Confidence")
     pct     = int(conf * 100) if conf and conf <= 1 else (int(conf) if conf else None)
     evt_id  = f.get("Event ID", "")
+    day_num = int(f.get("Conflict Day") or 0)
+
+    date = f.get("Date", "")
+    if not date:
+        if day_num:
+            date = (CONFLICT_START + timedelta(days=day_num - 1)).strftime("%Y-%m-%d")
+            print(f"  WARNING: {evt_id} missing Date — derived from Conflict Day {day_num}: {date}")
+        else:
+            print(f"  SKIPPING {evt_id}: missing both Date and Conflict Day")
+            skipped.append(evt_id)
+            continue
 
     # Build sources list grouped by source name
     by_name = defaultdict(list)
@@ -126,9 +138,12 @@ for rec in raw_events:
         "sources":     sources,
         "confidence":  pct,
         "tags":        f.get("Tags", []),
-        "date":        f.get("Date", ""),
-        "day":         int(f.get("Conflict Day") or 0),
+        "date":        date,
+        "day":         day_num,
     })
+
+if skipped:
+    print(f"\n  SKIPPED {len(skipped)} event(s) with no date or conflict day: {', '.join(skipped)}")
 
 archive_data = {"days": days_data, "events": events_data}
 

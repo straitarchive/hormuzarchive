@@ -443,11 +443,48 @@
   .vtl-entry.vtl-left .vtl-expand { text-align: right; }
   .vtl-card.open .vtl-expand { color: var(--amber); }
 
+  /* ── Tabs ── */
+  .chart-tabs {
+    border: 1px solid var(--border);
+  }
+
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border-bright);
+    background: var(--surface);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    padding: 14px 22px;
+    cursor: pointer;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+    flex-shrink: 0;
+  }
+  .tab-btn:hover { color: var(--text); border-bottom-color: var(--border-bright); }
+  .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); font-weight: 700; }
+
+  .tab-pane { display: none; padding: 28px 28px 24px; }
+  .tab-pane.active { display: block; }
+
   @media (max-width: 900px) {
-    .chart-row.two-col { grid-template-columns: 1fr; }
     .stat-strip { grid-template-columns: repeat(2, 1fr); }
     .overview-main { padding: 24px 16px 60px; }
     .header-main { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .tab-btn { padding: 12px 14px; font-size: 8px; }
   }
 </style>
 </head>
@@ -473,12 +510,7 @@
 
 <main class="overview-main">
 
-  <div class="overview-intro">
-    <h2>Conflict <span>at a glance</span></h2>
-    <p>Visual summary of Operation Epic Fury — Day 1 (February 28, 2026) through present. Charts read from the live archive. Data reflects only events with Submission Status: approved.</p>
-  </div>
-
-  <!-- Stat strip -->
+  <!-- Stats bar — live metrics -->
   <div class="stat-strip" id="stat-strip">
     <div class="stat-cell">
       <div class="stat-label">Conflict Day</div>
@@ -496,16 +528,30 @@
       <div class="stat-sub">all prior crises combined</div>
     </div>
     <div class="stat-cell">
-      <div class="stat-label">Brent Peak</div>
-      <div class="stat-value">$118</div>
-      <div class="stat-sub">Day 9 Sunday futures</div>
+      <div class="stat-label">Brent Crude (Live)</div>
+      <div class="stat-value" id="s-brent">—</div>
+      <div class="stat-sub">current futures price</div>
     </div>
   </div>
 
-  <div class="chart-grid">
+  <div class="overview-intro">
+    <h2>Conflict <span>at a glance</span></h2>
+    <p>Visual summary of Operation Epic Fury — Day 1 (February 28, 2026) through present. Charts read from the live archive. Data reflects only events with Submission Status: approved.</p>
+  </div>
 
-    <!-- 1. Vertical Chronological Timeline -->
-    <div class="chart-panel">
+  <!-- Tabbed chart interface -->
+  <div class="chart-tabs">
+
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="tab-timeline">Timeline</button>
+      <button class="tab-btn" data-tab="tab-scatter">Conflict Map</button>
+      <button class="tab-btn" data-tab="tab-brent">Brent Crude</button>
+      <button class="tab-btn" data-tab="tab-status">Event Status</button>
+      <button class="tab-btn" data-tab="tab-supply">Supply Shock</button>
+    </div>
+
+    <!-- Tab 1: Vertical Timeline -->
+    <div class="tab-pane active" id="tab-timeline">
       <div class="chart-panel-header">
         <div class="chart-panel-label">Chart 01</div>
         <div class="chart-panel-title">CHRONOLOGICAL EVENT RECORD — DAY 1 TO PRESENT</div>
@@ -523,17 +569,17 @@
       </div>
     </div>
 
-    <!-- 2. Scatter Timeline -->
-    <div class="chart-panel">
+    <!-- Tab 2: Scatter / Conflict Map -->
+    <div class="tab-pane" id="tab-scatter">
       <div class="chart-panel-header">
         <div class="chart-panel-label">Chart 02</div>
         <div class="chart-panel-title">CONFLICT TIMELINE — EVENTS BY DAY &amp; CATEGORY</div>
         <div class="chart-panel-subtitle">Each point is one archived event. Position = conflict day. Lane = category. Size = confidence. Color = status. Hover for title.</div>
       </div>
-      <div class="chart-wrap" style="height:280px;">
+      <div class="chart-wrap" style="height:320px;">
         <canvas id="timelineChart"></canvas>
       </div>
-      <div class="chart-legend">
+      <div class="chart-legend" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
         <div class="legend-item"><div class="legend-dot" style="background:#6aaa7a"></div>Confirmed</div>
         <div class="legend-item"><div class="legend-dot" style="background:#d4a843"></div>Monitoring</div>
         <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div>Suppressed</div>
@@ -541,52 +587,50 @@
       </div>
     </div>
 
-    <!-- Row 3: Brent + Status -->
-    <div class="chart-row two-col">
-
-      <!-- 3. Brent Crude -->
-      <div class="chart-panel">
-        <div class="chart-panel-header">
-          <div class="chart-panel-label">Chart 03</div>
-          <div class="chart-panel-title">BRENT CRUDE — DAY-BY-DAY PRICE TRAJECTORY</div>
-          <div class="chart-panel-subtitle">Pre-war $72.87 → Day 9 peak $118 → suppressed to ~$84–96 with largest supply shock in history ongoing. Shaded region = analyst-assessed expected range. Current: <span id="brent-now" style="color:var(--amber)">—</span></div>
-        </div>
-        <div class="chart-wrap" style="height:280px;">
-          <canvas id="brentChart"></canvas>
-        </div>
+    <!-- Tab 3: Brent Crude -->
+    <div class="tab-pane" id="tab-brent">
+      <div class="chart-panel-header">
+        <div class="chart-panel-label">Chart 03</div>
+        <div class="chart-panel-title">BRENT CRUDE — DAY-BY-DAY PRICE TRAJECTORY</div>
+        <div class="chart-panel-subtitle">Pre-war $72.87 → Day 9 peak $118 → suppressed to ~$84–96 with largest supply shock in history ongoing. Shaded region = analyst-assessed expected range. Current: <span id="brent-now" style="color:var(--amber)">—</span></div>
       </div>
-
-      <!-- 4. Status Breakdown -->
-      <div class="chart-panel">
-        <div class="chart-panel-header">
-          <div class="chart-panel-label">Chart 04</div>
-          <div class="chart-panel-title">EVENT STATUS BREAKDOWN</div>
-          <div class="chart-panel-subtitle">Live count from archive JSON. Updates automatically on rebuild.</div>
-        </div>
-        <div class="chart-wrap" style="height:220px;">
-          <canvas id="statusChart"></canvas>
-        </div>
-        <div class="chart-legend" id="status-legend" style="margin-top:12px;padding-top:12px;"></div>
+      <div class="chart-wrap" style="height:340px;">
+        <canvas id="brentChart"></canvas>
       </div>
-
     </div>
 
-    <!-- 5. Supply Shock Comparison -->
-    <div class="chart-panel">
+    <!-- Tab 4: Status Breakdown -->
+    <div class="tab-pane" id="tab-status">
+      <div class="chart-panel-header">
+        <div class="chart-panel-label">Chart 04</div>
+        <div class="chart-panel-title">EVENT STATUS BREAKDOWN</div>
+        <div class="chart-panel-subtitle">Live count from archive JSON. Updates automatically on rebuild.</div>
+      </div>
+      <div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap;">
+        <div class="chart-wrap" style="height:280px;flex:0 0 280px;">
+          <canvas id="statusChart"></canvas>
+        </div>
+        <div class="chart-legend" id="status-legend" style="flex:1;flex-direction:column;align-items:flex-start;gap:12px;min-width:180px;border-top:none;padding-top:0;margin-top:0;"></div>
+      </div>
+    </div>
+
+    <!-- Tab 5: Supply Shock -->
+    <div class="tab-pane" id="tab-supply">
       <div class="chart-panel-header">
         <div class="chart-panel-label">Chart 05</div>
         <div class="chart-panel-title">SUPPLY SHOCK — HISTORICAL COMPARISON</div>
         <div class="chart-panel-subtitle">Million barrels per day removed from global supply at peak disruption. Source: Iran FM Araghchi comparative data (EVT-019), IEA historical records.</div>
       </div>
-      <div class="chart-wrap" style="height:240px;">
+      <div class="chart-wrap" style="height:280px;">
         <canvas id="supplyChart"></canvas>
       </div>
-      <div class="shock-note">
+      <div class="shock-note" style="margin-top:20px;">
         <strong>The 2026 Hormuz closure removes ~20 million barrels per day</strong> — approximately 4× the combined magnitude of all prior major supply shocks in recorded history. Markets are currently pricing this at approximately $96/bbl, a disconnect analysts across the political spectrum attribute to active intervention.
       </div>
     </div>
 
   </div>
+
 </main>
 
 <footer class="site-footer">
@@ -668,10 +712,18 @@
       .then(function(w) {
         var meta = JSON.parse(w.contents).chart.result[0].meta;
         var price = (meta.regularMarketPrice || meta.previousClose || 0).toFixed(2);
-        document.getElementById('brent-now').textContent = '$' + price;
+        var val = '$' + price;
+        var el1 = document.getElementById('brent-now');
+        var el2 = document.getElementById('s-brent');
+        if (el1) el1.textContent = val;
+        if (el2) el2.textContent = val;
       })
       .catch(function() {});
   })();
+
+  // ── Lazy render tracking ──────────────────────────────────────────────────
+  var rendered = { timeline: false, scatter: false, brent: false, status: false, supply: false };
+  var archiveData = null;
 
   // ── Load archive data from index.html then render ─────────────────────────
   fetch('index.html')
@@ -682,28 +734,46 @@
       return JSON.parse(match[1]);
     })
     .catch(function() {
-      // Fallback: minimal static data if fetch fails
-      return {
-        days: [
-          {day:1},{day:7},{day:9},{day:10},{day:11},{day:12},{day:14}
-        ],
-        events: []
-      };
+      return { days: [{day:1},{day:7},{day:9},{day:10},{day:11},{day:12},{day:14}], events: [] };
     })
     .then(renderAll);
 
-  // ── Render all charts ─────────────────────────────────────────────────────
+  // ── Initial render (default tab: TIMELINE) ────────────────────────────────
   function renderAll(data) {
+    archiveData = data;
     var events = data.events || [];
-
-    // Update stat strip
     document.getElementById('s-total').textContent = events.length;
-
     renderVertTimeline(events);
-    renderTimeline(events);
-    renderStatus(events);
-    renderBrent();
-    renderSupply();
+    rendered.timeline = true;
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tabId = this.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+      document.getElementById(tabId).classList.add('active');
+      lazyRender(tabId);
+    });
+  });
+
+  function lazyRender(tabId) {
+    var events = archiveData ? archiveData.events || [] : [];
+    if (tabId === 'tab-scatter' && !rendered.scatter) {
+      renderTimeline(events);
+      rendered.scatter = true;
+    } else if (tabId === 'tab-brent' && !rendered.brent) {
+      renderBrent();
+      rendered.brent = true;
+    } else if (tabId === 'tab-status' && !rendered.status) {
+      renderStatus(events);
+      rendered.status = true;
+    } else if (tabId === 'tab-supply' && !rendered.supply) {
+      renderSupply();
+      rendered.supply = true;
+    }
   }
 
   // ── Utility: escape HTML ──────────────────────────────────────────────────

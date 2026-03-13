@@ -397,7 +397,7 @@
         <div class="chart-panel-header">
           <div class="chart-panel-label">Chart 02</div>
           <div class="chart-panel-title">BRENT CRUDE — DAY-BY-DAY PRICE TRAJECTORY</div>
-          <div class="chart-panel-subtitle">Pre-war $72.87 → Day 9 peak $118. Annotated with key archive events. Current: <span id="brent-now" style="color:var(--amber)">—</span></div>
+          <div class="chart-panel-subtitle">Pre-war $72.87 → Day 9 peak $118 → suppressed to ~$84–96 with largest supply shock in history ongoing. Shaded region = analyst-assessed expected range. Current: <span id="brent-now" style="color:var(--amber)">—</span></div>
         </div>
         <div class="chart-wrap" style="height:280px;">
           <canvas id="brentChart"></canvas>
@@ -556,22 +556,40 @@
 
   // ── Chart 1: Conflict Timeline ────────────────────────────────────────────
   function renderTimeline(events) {
-    // Jitter y-position within lane so overlapping events are readable
-    var laneOffsets = {};
-    var points = events.map(function(ev) {
+    // Pass 1: group events by (day, lane) so we can evenly spread y-positions
+    var groups = {};
+    events.forEach(function(ev, i) {
       var lane = getCategoryLane(ev.category);
       var key = ev.day + '-' + lane;
-      laneOffsets[key] = (laneOffsets[key] || 0) + 1;
-      var count = laneOffsets[key];
-      // spread: alternate left/right from lane center
-      var jitter = (count % 2 === 0 ? 1 : -1) * Math.floor(count / 2) * 0.08;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(i);
+    });
+
+    // Pass 2: assign final y-position for each event index
+    var yForIndex = events.map(function(ev) { return getCategoryLane(ev.category); });
+    Object.keys(groups).forEach(function(key) {
+      var idxs = groups[key];
+      var n = idxs.length;
+      var lane = getCategoryLane(events[idxs[0]].category);
+      // spread grows with group size, capped at ±0.40 to stay within the lane band
+      var halfSpread = n === 1 ? 0 : Math.min(0.40, 0.08 + (n - 1) * 0.07);
+      idxs.forEach(function(origIdx, rank) {
+        yForIndex[origIdx] = n === 1
+          ? lane
+          : (lane - halfSpread) + rank * (2 * halfSpread / (n - 1));
+      });
+    });
+
+    var points = events.map(function(ev, i) {
       return {
-        x: ev.day,
-        y: lane + jitter,
-        r: ev.confidence ? Math.max(4, Math.min(10, ev.confidence / 14)) : 5,
-        color: statusColor(ev.type),
-        title: ev.title,
-        type: ev.type,
+        x:          ev.day,
+        y:          yForIndex[i],
+        r:          ev.confidence ? Math.max(3, Math.min(8, ev.confidence / 13)) : 4,
+        color:      statusColor(ev.type),
+        title:      ev.title || '',
+        type:       ev.type,
+        confidence: ev.confidence,
+        lane:       getCategoryLane(ev.category),
       };
     });
 
@@ -582,9 +600,11 @@
       data: {
         datasets: [{
           data: points.map(function(p) { return { x: p.x, y: p.y, r: p.r }; }),
-          backgroundColor: points.map(function(p) { return p.color + 'cc'; }),
+          backgroundColor: points.map(function(p) { return p.color + 'bb'; }),
           borderColor:     points.map(function(p) { return p.color; }),
           borderWidth: 1,
+          hoverBackgroundColor: points.map(function(p) { return p.color; }),
+          hoverBorderWidth: 2,
         }]
       },
       options: {
@@ -597,22 +617,33 @@
               title: function() { return ''; },
               label: function(ctx) {
                 var p = points[ctx.dataIndex];
-                var lane = CATEGORY_LANES[Math.round(p.y)] || CATEGORY_LANES[0];
-                var lines = [
-                  'Day ' + p.x + '  —  ' + lane.label,
-                  p.title.length > 60 ? p.title.slice(0, 58) + '…' : p.title,
-                  (p.type || '').toUpperCase(),
-                ];
-                return lines;
+                var laneName = (CATEGORY_LANES[p.lane] || CATEGORY_LANES[0]).label;
+                // word-wrap title at ~52 chars
+                var words = p.title.split(' ');
+                var lines = [], cur = '';
+                words.forEach(function(w) {
+                  if (cur.length && (cur + ' ' + w).length > 52) { lines.push(cur); cur = w; }
+                  else { cur = cur ? cur + ' ' + w : w; }
+                });
+                if (cur) lines.push(cur);
+                // header
+                var out = ['Day ' + p.x + '  ·  ' + laneName];
+                lines.forEach(function(l) { out.push(l); });
+                out.push(
+                  (p.type || '').toUpperCase() +
+                  (p.confidence != null ? '  ·  ' + p.confidence + '% confidence' : '')
+                );
+                return out;
               }
             },
-            backgroundColor: '#1a1a18',
+            backgroundColor: '#12120fee',
             borderColor: C.border,
             borderWidth: 1,
             titleColor: C.amber,
             bodyColor: C.text,
-            padding: 12,
+            padding: 14,
             bodyFont: { family: C.mono, size: 10 },
+            boxPadding: 4,
           },
           annotation: {
             annotations: {
@@ -671,47 +702,24 @@
             }
           }
         }
-      }
+      },
     });
   }
 
   // ── Chart 2: Brent Crude ──────────────────────────────────────────────────
   function renderBrent() {
-    // Curated price series from archive events
-    var days   = [0,   1,    2,    3,    4,    5,    6,    7,    8,    9,     10,    11,   12,   13,   14];
-    var prices = [72.87,74.5, 76.2, 78.8, 80.4, 82.1, 85.9, 92.0, 96.8, 118.0, 107.0, 84.0, 87.0, 91.5, 96.22];
+    // Price series — Day 10 shows $119.50 WTI-equivalent peak before the crash
+    // The cliff from Day 10 → Day 11 ($119.50 → $84) makes the manipulation visible
+    var days   = [0,     1,    2,    3,    4,    5,    6,    7,    8,    9,     10,    11,   12,   13,   14];
+    var prices = [72.87, 74.5, 76.2, 78.8, 80.4, 82.1, 85.9, 92.0, 96.8, 118.0, 119.5, 84.0, 87.0, 91.5, 96.22];
 
-    var keyEvents = [
-      { day: 7,  label: 'Kuwait FM\n$92',       y: 92.0  },
-      { day: 9,  label: '$118 peak\n(Sunday)',  y: 118.0 },
-      { day: 11, label: 'SPR + mines\n$84',     y: 84.0  },
-      { day: 12, label: 'Wright post\ndeleted', y: 87.0  },
-    ];
+    // Key event day → array index mapping (same as days[])
+    var KEY_IDX = [1, 7, 9, 9, 10, 11];
 
     var annotations = {};
 
-    keyEvents.forEach(function(ev, i) {
-      annotations['line' + i] = {
-        type: 'line',
-        xMin: ev.day, xMax: ev.day,
-        borderColor: C.borderBright,
-        borderWidth: 1,
-        borderDash: [3, 3],
-      };
-      annotations['label' + i] = {
-        type: 'label',
-        xValue: ev.day,
-        yValue: ev.y + (i % 2 === 0 ? 8 : -12),
-        content: ev.label.split('\n'),
-        color: C.textDim,
-        font: { family: C.mono, size: 8 },
-        textAlign: 'center',
-        backgroundColor: 'transparent',
-      };
-    });
-
-    // Pre-war baseline
-    annotations['prewar'] = {
+    // ── Pre-war baseline ──
+    annotations.prewar = {
       type: 'line',
       yMin: 72.87, yMax: 72.87,
       borderColor: C.borderBright,
@@ -724,9 +732,108 @@
         color: C.textDim,
         font: { family: C.mono, size: 8 },
         backgroundColor: 'transparent',
-        yAdjust: -10,
+        yAdjust: -9,
       }
     };
+
+    // ── Manipulation gap — shaded region showing expected vs suppressed price ──
+    annotations.gapBox = {
+      type: 'box',
+      xMin: 9, xMax: 14.5,
+      yMin: 138, yMax: 228,
+      backgroundColor: 'rgba(192,57,43,0.05)',
+      borderColor: 'rgba(192,57,43,0.28)',
+      borderWidth: 1,
+      borderDash: [5, 4],
+    };
+    annotations.gapLabel = {
+      type: 'label',
+      xValue: 11.75,
+      yValue: 192,
+      content: ['PRICE SUPPRESSION GAP', 'Expected range: $140 – $220+', 'Actual (Day 14): ~$96'],
+      color: C.red,
+      font: { family: C.mono, size: 8 },
+      textAlign: 'center',
+      backgroundColor: 'transparent',
+    };
+    // Bracket line at the bottom of the gap box marking where price "should be"
+    annotations.gapFloor = {
+      type: 'line',
+      yMin: 138, yMax: 138,
+      xMin: 9, xMax: 14.5,
+      borderColor: 'rgba(192,57,43,0.40)',
+      borderWidth: 1,
+      borderDash: [3, 3],
+    };
+
+    // ── 6 key event vertical markers ──
+    var markers = [
+      {
+        idx: 1,
+        lineColor: C.borderBright,
+        text: ['WAR BEGINS', 'Feb 28 — $72.87'],
+        textColor: C.textDim,
+        yValue: 74.5 + 26,
+      },
+      {
+        idx: 7,
+        lineColor: C.borderBright,
+        text: ['LARGEST WEEKLY GAIN', 'SINCE 1982  ($92)'],
+        textColor: C.textDim,
+        yValue: 92.0 + 24,
+      },
+      {
+        idx: 9,
+        lineColor: C.amber + '88',
+        text: ['$118 SUNDAY PEAK'],
+        textColor: C.amber,
+        yValue: 118.0 + 13,
+      },
+      {
+        idx: 9,
+        lineColor: null, // share line with above
+        text: ['G7 −400M BBL', 'RELEASE ANNOUNCED'],
+        textColor: C.blue,
+        yValue: 118.0 - 30,
+      },
+      {
+        idx: 10,
+        lineColor: C.red + 'aa',
+        text: ['FAKE TANKER POST', 'WTI $119 → $87 CRASH'],
+        textColor: C.red,
+        yValue: 119.5 + 15,
+      },
+      {
+        idx: 11,
+        lineColor: C.borderBright,
+        text: ['MINES IN STRAIT', 'SPR ANNOUNCED'],
+        textColor: C.textDim,
+        yValue: 84.0 - 26,
+      },
+    ];
+
+    markers.forEach(function(m, i) {
+      if (m.lineColor) {
+        annotations['vline_' + i] = {
+          type: 'line',
+          xMin: m.idx, xMax: m.idx,
+          borderColor: m.lineColor,
+          borderWidth: 1,
+          borderDash: [3, 3],
+        };
+      }
+      annotations['vlabel_' + i] = {
+        type: 'label',
+        xValue: m.idx,
+        yValue: m.yValue,
+        content: m.text,
+        color: m.textColor,
+        font: { family: C.mono, size: 8 },
+        textAlign: 'center',
+        backgroundColor: '#0e0e0ccc',
+        padding: { x: 5, y: 3 },
+      };
+    });
 
     new Chart(document.getElementById('brentChart'), {
       type: 'line',
@@ -737,20 +844,25 @@
           borderColor: C.amber,
           backgroundColor: function(ctx) {
             var chart = ctx.chart;
-            var gradient = chart.ctx.createLinearGradient(0, 0, 0, chart.height);
-            gradient.addColorStop(0, C.amber + '40');
-            gradient.addColorStop(1, C.amber + '04');
-            return gradient;
+            var g = chart.ctx.createLinearGradient(0, 0, 0, chart.height);
+            g.addColorStop(0, C.amber + '38');
+            g.addColorStop(0.75, C.amber + '08');
+            g.addColorStop(1, C.amber + '00');
+            return g;
           },
           borderWidth: 2,
           pointRadius: prices.map(function(_, i) {
-            return [7, 9, 11, 12].indexOf(i) !== -1 ? 4 : 2;
+            return [1, 7, 9, 10, 11].indexOf(i) !== -1 ? 5 : 2;
           }),
-          pointBackgroundColor: prices.map(function(p, i) {
-            return [7, 9, 11, 12].indexOf(i) !== -1 ? C.amber : C.amberDim;
+          pointBackgroundColor: prices.map(function(_, i) {
+            if (i === 10) return C.red;
+            if (i === 9)  return C.amber;
+            return [1, 7, 11].indexOf(i) !== -1 ? C.amber : C.amberDim;
           }),
-          pointBorderColor: C.amber,
-          tension: 0.35,
+          pointBorderColor: prices.map(function(_, i) {
+            return i === 10 ? C.red : C.amber;
+          }),
+          tension: 0.30,
           fill: true,
         }]
       },
@@ -761,14 +873,21 @@
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: function(ctx) { return '$' + ctx.parsed.y.toFixed(2) + ' /bbl'; }
+              title: function(items) {
+                var d = days[items[0].dataIndex];
+                return d === 0 ? 'Pre-war' : 'Day ' + d;
+              },
+              label: function(ctx) {
+                return '  Brent  $' + ctx.parsed.y.toFixed(2) + ' /bbl';
+              }
             },
-            backgroundColor: '#1a1a18',
+            backgroundColor: '#12120fee',
             borderColor: C.border,
             borderWidth: 1,
-            bodyColor: C.amber,
+            titleColor: C.amber,
+            bodyColor: C.text,
             bodyFont: { family: C.mono, size: 11 },
-            padding: 10,
+            padding: 12,
           },
           annotation: { annotations: annotations }
         },
@@ -779,12 +898,14 @@
             ticks: { color: C.textDim, maxRotation: 0 },
           },
           y: {
-            min: 65,
+            min: 62,
+            max: 235,
             grid: { color: C.border },
             border: { color: C.border },
             ticks: {
               color: C.textDim,
-              callback: function(v) { return '$' + v; }
+              callback: function(v) { return '$' + v; },
+              stepSize: 30,
             }
           }
         }

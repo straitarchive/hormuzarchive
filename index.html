@@ -90,7 +90,7 @@
     50% { opacity: 0.3; }
   }
 
-  .header-main { padding: 24px 32px 20px; }
+  .header-main { padding: 24px 32px 20px; display: flex; align-items: flex-end; justify-content: space-between; }
 
   .site-title {
     font-family: var(--serif);
@@ -506,8 +506,14 @@
 <div class="live-indicator"><div class="live-dot"></div>CONFLICT ACTIVE — DAY <span id="live-day-num">—</span></div>
 </div>
 <div class="header-main">
+<div>
 <h1 class="site-title">HORMUZ <span>ARCHIVE</span></h1>
 <div class="site-subtitle">Operation Epic Fury — The Contemporaneous Record — February 28, 2026 →</div>
+</div>
+<nav style="display:flex;gap:4px;align-items:center;padding-bottom:4px;">
+<a href="index.html" style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;padding:5px 14px;border:1px solid var(--amber);background:var(--amber);color:var(--bg);font-weight:700;font-family:var(--mono);">Archive</a>
+<a href="overview.html" style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;padding:5px 14px;border:1px solid var(--border-bright);color:var(--text-dim);font-family:var(--mono);transition:all 0.15s;" onmouseover="this.style.borderColor='var(--amber)';this.style.color='var(--amber)'" onmouseout="this.style.borderColor='var(--border-bright)';this.style.color='var(--text-dim)'">Visual Overview →</a>
+</nav>
 </div>
 <div class="header-meta">
 <div class="meta-stat"><div class="meta-label">Conflict Day</div><div class="meta-value" id="conflict-day">11</div></div>

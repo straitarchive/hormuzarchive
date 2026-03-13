@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HORMUZ ARCHIVE — Visual Overview</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a08;
+    --surface: #111110;
+    --border: #2a2a26;
+    --border-bright: #3a3a34;
+    --text: #c8c8b8;
+    --text-dim: #6a6a5a;
+    --text-bright: #e8e8d8;
+    --amber: #d4a843;
+    --amber-dim: #8a6d2a;
+    --red: #c0392b;
+    --red-dim: #7a2420;
+    --green: #4a7c59;
+    --green-bright: #6aaa7a;
+    --blue: #7a9ec0;
+    --mono: 'Space Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .classification {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--red);
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .header-main {
+    padding: 24px 32px 20px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .site-title {
+    font-family: var(--serif);
+    font-size: 42px;
+    color: var(--text-bright);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .site-title span { color: var(--amber); font-style: italic; }
+
+  .site-subtitle {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* ── Page nav ── */
+  .page-nav {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding-bottom: 4px;
+  }
+
+  .page-nav a {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 5px 14px;
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+
+  .page-nav a:hover { border-color: var(--amber); color: var(--amber); }
+  .page-nav a.active { background: var(--amber); border-color: var(--amber); color: var(--bg); font-weight: 700; }
+
+  /* ── Main content ── */
+  .overview-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  .overview-intro {
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .overview-intro h2 {
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--text-bright);
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+
+  .overview-intro h2 span { color: var(--amber); font-style: italic; }
+
+  .overview-intro p {
+    font-size: 11px;
+    color: var(--text-dim);
+    max-width: 600px;
+    line-height: 1.8;
+  }
+
+  /* ── Chart panels ── */
+  .chart-grid {
+    display: grid;
+    gap: 24px;
+  }
+
+  .chart-row {
+    display: grid;
+    gap: 24px;
+  }
+
+  .chart-row.two-col { grid-template-columns: 3fr 2fr; }
+
+  .chart-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px 28px 24px;
+  }
+
+  .chart-panel-header {
+    margin-bottom: 20px;
+  }
+
+  .chart-panel-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .chart-panel-title {
+    font-size: 14px;
+    color: var(--text-bright);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .chart-panel-subtitle {
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .chart-wrap {
+    position: relative;
+  }
+
+  /* ── Legend ── */
+  .chart-legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Supply shock highlight ── */
+  .shock-note {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--amber);
+    background: rgba(212,168,67,0.04);
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .shock-note strong { color: var(--amber); }
+
+  /* ── Stat strip ── */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .stat-cell {
+    background: var(--surface);
+    padding: 18px 20px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-value.red { color: var(--red); }
+  .stat-value.green { color: var(--green-bright); }
+  .stat-value.blue { color: var(--blue); }
+
+  .stat-sub {
+    font-size: 9px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* ── Footer ── */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  @media (max-width: 900px) {
+    .chart-row.two-col { grid-template-columns: 1fr; }
+    .stat-strip { grid-template-columns: repeat(2, 1fr); }
+    .overview-main { padding: 24px 16px 60px; }
+    .header-main { flex-direction: column; align-items: flex-start; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+<div class="header-top">
+  <div class="classification">OPEN SOURCE INTELLIGENCE — PUBLIC RECORD</div>
+  <div style="font-size:9px;letter-spacing:0.15em;color:var(--text-dim);">VISUAL OVERVIEW</div>
+  <div class="live-indicator"><div class="live-dot"></div>CONFLICT ACTIVE — DAY <span id="live-day-num">—</span></div>
+</div>
+<div class="header-main">
+  <div>
+    <h1 class="site-title">HORMUZ <span>ARCHIVE</span></h1>
+    <div class="site-subtitle">Operation Epic Fury — The Contemporaneous Record — February 28, 2026 →</div>
+  </div>
+  <nav class="page-nav">
+    <a href="index.html">← Archive</a>
+    <a href="overview.html" class="active">Visual Overview</a>
+  </nav>
+</div>
+</header>
+
+<main class="overview-main">
+
+  <div class="overview-intro">
+    <h2>Conflict <span>at a glance</span></h2>
+    <p>Visual summary of Operation Epic Fury — Day 1 (February 28, 2026) through present. Charts read from the live archive. Data reflects only events with Submission Status: approved.</p>
+  </div>
+
+  <!-- Stat strip -->
+  <div class="stat-strip" id="stat-strip">
+    <div class="stat-cell">
+      <div class="stat-label">Conflict Day</div>
+      <div class="stat-value" id="s-day">—</div>
+      <div class="stat-sub">since Feb 28, 2026</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Total Events</div>
+      <div class="stat-value green" id="s-total">—</div>
+      <div class="stat-sub">in archive</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Supply Shock</div>
+      <div class="stat-value red">4×</div>
+      <div class="stat-sub">all prior crises combined</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Brent Peak</div>
+      <div class="stat-value">$118</div>
+      <div class="stat-sub">Day 9 Sunday futures</div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+
+    <!-- 1. Conflict Timeline -->
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-label">Chart 01</div>
+        <div class="chart-panel-title">CONFLICT TIMELINE — EVENTS BY DAY &amp; CATEGORY</div>
+        <div class="chart-panel-subtitle">Each point is one archived event. Position = conflict day. Lane = category. Size = confidence. Color = status. Hover for title.</div>
+      </div>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="timelineChart"></canvas>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#6aaa7a"></div>Confirmed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#d4a843"></div>Monitoring</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div>Suppressed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7a9ec0"></div>Economic</div>
+      </div>
+    </div>
+
+    <!-- Row 2: Brent + Status -->
+    <div class="chart-row two-col">
+
+      <!-- 2. Brent Crude -->
+      <div class="chart-panel">
+        <div class="chart-panel-header">
+          <div class="chart-panel-label">Chart 02</div>
+          <div class="chart-panel-title">BRENT CRUDE — DAY-BY-DAY PRICE TRAJECTORY</div>
+          <div class="chart-panel-subtitle">Pre-war $72.87 → Day 9 peak $118. Annotated with key archive events. Current: <span id="brent-now" style="color:var(--amber)">—</span></div>
+        </div>
+        <div class="chart-wrap" style="height:280px;">
+          <canvas id="brentChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 3. Status Breakdown -->
+      <div class="chart-panel">
+        <div class="chart-panel-header">
+          <div class="chart-panel-label">Chart 03</div>
+          <div class="chart-panel-title">EVENT STATUS BREAKDOWN</div>
+          <div class="chart-panel-subtitle">Distribution of <span id="total-events-label">—</span> archived events by verification status.</div>
+        </div>
+        <div class="chart-wrap" style="height:220px;">
+          <canvas id="statusChart"></canvas>
+        </div>
+        <div class="chart-legend" id="status-legend" style="margin-top:12px;padding-top:12px;"></div>
+      </div>
+
+    </div>
+
+    <!-- 4. Supply Shock Comparison -->
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-label">Chart 04</div>
+        <div class="chart-panel-title">SUPPLY SHOCK — HISTORICAL COMPARISON</div>
+        <div class="chart-panel-subtitle">Daily barrels removed from global supply at peak disruption. Source: Iran FM Araghchi comparative data (EVT-019), IEA historical records.</div>
+      </div>
+      <div class="chart-wrap" style="height:240px;">
+        <canvas id="supplyChart"></canvas>
+      </div>
+      <div class="shock-note">
+        <strong>The 2026 Hormuz closure removes ~20 million barrels per day</strong> — approximately 4× the combined magnitude of all prior major supply shocks in recorded history. Markets are currently pricing this at approximately $96/bbl, a disconnect analysts across the political spectrum attribute to active intervention.
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div>HORMUZ ARCHIVE — Open source intelligence, publicly sourced</div>
+  <div style="font-style:italic;">History is written by winners. This record was written while it happened.</div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Design tokens for Chart.js ────────────────────────────────────────────
+  var C = {
+    bg:          '#0a0a08',
+    surface:     '#111110',
+    border:      '#2a2a26',
+    borderBright:'#3a3a34',
+    text:        '#c8c8b8',
+    textDim:     '#6a6a5a',
+    textBright:  '#e8e8d8',
+    amber:       '#d4a843',
+    amberDim:    '#8a6d2a',
+    red:         '#c0392b',
+    green:       '#6aaa7a',
+    blue:        '#7a9ec0',
+    mono:        "'Space Mono', monospace",
+    confirmed:   '#6aaa7a',
+    monitoring:  '#d4a843',
+    suppressed:  '#c0392b',
+    economic:    '#7a9ec0',
+  };
+
+  Chart.defaults.color = C.textDim;
+  Chart.defaults.font.family = C.mono;
+  Chart.defaults.font.size = 10;
+
+  // ── Category lane mapping ─────────────────────────────────────────────────
+  var CATEGORY_LANES = [
+    { label: 'Info Warfare',  key: ['information', 'cyber', 'suppressed', 'misinformation'] },
+    { label: 'Diplomatic',    key: ['diplomatic', 'diplomacy', 'political'] },
+    { label: 'Economic',      key: ['economic', 'market', 'financial', 'oil', 'insurance', 'shipping'] },
+    { label: 'Military',      key: ['military', 'naval', 'air', 'casualt', 'nuclear', 'strike', 'mine', 'drone'] },
+  ];
+
+  function getCategoryLane(category) {
+    var cat = (category || '').toLowerCase();
+    for (var i = CATEGORY_LANES.length - 1; i >= 0; i--) {
+      for (var j = 0; j < CATEGORY_LANES[i].key.length; j++) {
+        if (cat.indexOf(CATEGORY_LANES[i].key[j]) !== -1) return i;
+      }
+    }
+    return 0;
+  }
+
+  function statusColor(type) {
+    var t = (type || '').toLowerCase();
+    if (t === 'confirmed')   return C.confirmed;
+    if (t === 'economic')    return C.economic;
+    if (t === 'suppressed')  return C.suppressed;
+    return C.monitoring;
+  }
+
+  // ── Conflict day from Feb 28 ──────────────────────────────────────────────
+  var START = new Date('2026-02-28T00:00:00Z');
+  function currentConflictDay() {
+    var now = new Date();
+    var diff = Math.floor((now - START) / 86400000) + 1;
+    return Math.max(diff, 1);
+  }
+
+  document.getElementById('live-day-num').textContent = currentConflictDay();
+  document.getElementById('s-day').textContent = currentConflictDay();
+
+  // ── Fetch live Brent price ────────────────────────────────────────────────
+  (function fetchBrent() {
+    var target = 'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1m&range=1d';
+    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(target))
+      .then(function(r) { return r.json(); })
+      .then(function(w) {
+        var meta = JSON.parse(w.contents).chart.result[0].meta;
+        var price = (meta.regularMarketPrice || meta.previousClose || 0).toFixed(2);
+        document.getElementById('brent-now').textContent = '$' + price;
+      })
+      .catch(function() {});
+  })();
+
+  // ── Load archive data from index.html then render ─────────────────────────
+  fetch('index.html')
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var match = html.match(/<script id="archive-data"[^>]*>([\s\S]*?)<\/script>/);
+      if (!match) throw new Error('archive-data not found');
+      return JSON.parse(match[1]);
+    })
+    .catch(function() {
+      // Fallback: minimal static data if fetch fails
+      return {
+        days: [
+          {day:1},{day:7},{day:9},{day:10},{day:11},{day:12},{day:14}
+        ],
+        events: []
+      };
+    })
+    .then(renderAll);
+
+  // ── Render all charts ─────────────────────────────────────────────────────
+  function renderAll(data) {
+    var events = data.events || [];
+
+    // Update stat strip
+    document.getElementById('s-total').textContent = events.length;
+    document.getElementById('total-events-label').textContent = events.length;
+
+    renderTimeline(events);
+    renderStatus(events);
+    renderBrent();
+    renderSupply();
+  }
+
+  // ── Chart 1: Conflict Timeline ────────────────────────────────────────────
+  function renderTimeline(events) {
+    // Jitter y-position within lane so overlapping events are readable
+    var laneOffsets = {};
+    var points = events.map(function(ev) {
+      var lane = getCategoryLane(ev.category);
+      var key = ev.day + '-' + lane;
+      laneOffsets[key] = (laneOffsets[key] || 0) + 1;
+      var count = laneOffsets[key];
+      // spread: alternate left/right from lane center
+      var jitter = (count % 2 === 0 ? 1 : -1) * Math.floor(count / 2) * 0.08;
+      return {
+        x: ev.day,
+        y: lane + jitter,
+        r: ev.confidence ? Math.max(4, Math.min(10, ev.confidence / 14)) : 5,
+        color: statusColor(ev.type),
+        title: ev.title,
+        type: ev.type,
+      };
+    });
+
+    var maxDay = Math.max.apply(null, events.map(function(e) { return e.day; }).concat([14]));
+
+    new Chart(document.getElementById('timelineChart'), {
+      type: 'bubble',
+      data: {
+        datasets: [{
+          data: points.map(function(p) { return { x: p.x, y: p.y, r: p.r }; }),
+          backgroundColor: points.map(function(p) { return p.color + 'cc'; }),
+          borderColor:     points.map(function(p) { return p.color; }),
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: function() { return ''; },
+              label: function(ctx) {
+                var p = points[ctx.dataIndex];
+                var lane = CATEGORY_LANES[Math.round(p.y)] || CATEGORY_LANES[0];
+                var lines = [
+                  'Day ' + p.x + '  —  ' + lane.label,
+                  p.title.length > 60 ? p.title.slice(0, 58) + '…' : p.title,
+                  (p.type || '').toUpperCase(),
+                ];
+                return lines;
+              }
+            },
+            backgroundColor: '#1a1a18',
+            borderColor: C.border,
+            borderWidth: 1,
+            titleColor: C.amber,
+            bodyColor: C.text,
+            padding: 12,
+            bodyFont: { family: C.mono, size: 10 },
+          },
+          annotation: {
+            annotations: {
+              today: {
+                type: 'line',
+                xMin: currentConflictDay(),
+                xMax: currentConflictDay(),
+                borderColor: C.amberDim,
+                borderWidth: 1,
+                borderDash: [4, 4],
+                label: {
+                  content: 'TODAY',
+                  display: true,
+                  position: 'start',
+                  color: C.amberDim,
+                  font: { family: C.mono, size: 8 },
+                  backgroundColor: 'transparent',
+                  yAdjust: -8,
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            min: 0.5,
+            max: maxDay + 0.5,
+            grid: { color: C.border },
+            border: { color: C.border },
+            ticks: {
+              stepSize: 1,
+              callback: function(v) { return Number.isInteger(v) ? 'Day ' + v : ''; },
+              color: C.textDim,
+              maxRotation: 0,
+            },
+            title: {
+              display: true,
+              text: 'Conflict Day',
+              color: C.textDim,
+              font: { family: C.mono, size: 9 },
+              padding: { top: 8 },
+            }
+          },
+          y: {
+            min: -0.5,
+            max: CATEGORY_LANES.length - 0.5,
+            grid: { color: C.border },
+            border: { color: C.border },
+            ticks: {
+              stepSize: 1,
+              callback: function(v) {
+                var lane = CATEGORY_LANES[Math.round(v)];
+                return lane ? lane.label : '';
+              },
+              color: C.textDim,
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ── Chart 2: Brent Crude ──────────────────────────────────────────────────
+  function renderBrent() {
+    // Curated price series from archive events
+    var days   = [0,   1,    2,    3,    4,    5,    6,    7,    8,    9,     10,    11,   12,   13,   14];
+    var prices = [72.87,74.5, 76.2, 78.8, 80.4, 82.1, 85.9, 92.0, 96.8, 118.0, 107.0, 84.0, 87.0, 91.5, 96.22];
+
+    var keyEvents = [
+      { day: 7,  label: 'Kuwait FM\n$92',       y: 92.0  },
+      { day: 9,  label: '$118 peak\n(Sunday)',  y: 118.0 },
+      { day: 11, label: 'SPR + mines\n$84',     y: 84.0  },
+      { day: 12, label: 'Wright post\ndeleted', y: 87.0  },
+    ];
+
+    var annotations = {};
+
+    keyEvents.forEach(function(ev, i) {
+      annotations['line' + i] = {
+        type: 'line',
+        xMin: ev.day, xMax: ev.day,
+        borderColor: C.borderBright,
+        borderWidth: 1,
+        borderDash: [3, 3],
+      };
+      annotations['label' + i] = {
+        type: 'label',
+        xValue: ev.day,
+        yValue: ev.y + (i % 2 === 0 ? 8 : -12),
+        content: ev.label.split('\n'),
+        color: C.textDim,
+        font: { family: C.mono, size: 8 },
+        textAlign: 'center',
+        backgroundColor: 'transparent',
+      };
+    });
+
+    // Pre-war baseline
+    annotations['prewar'] = {
+      type: 'line',
+      yMin: 72.87, yMax: 72.87,
+      borderColor: C.borderBright,
+      borderWidth: 1,
+      borderDash: [2, 4],
+      label: {
+        content: 'pre-war $72.87',
+        display: true,
+        position: 'end',
+        color: C.textDim,
+        font: { family: C.mono, size: 8 },
+        backgroundColor: 'transparent',
+        yAdjust: -10,
+      }
+    };
+
+    new Chart(document.getElementById('brentChart'), {
+      type: 'line',
+      data: {
+        labels: days.map(function(d) { return d === 0 ? 'Pre' : 'D' + d; }),
+        datasets: [{
+          data: prices,
+          borderColor: C.amber,
+          backgroundColor: function(ctx) {
+            var chart = ctx.chart;
+            var gradient = chart.ctx.createLinearGradient(0, 0, 0, chart.height);
+            gradient.addColorStop(0, C.amber + '40');
+            gradient.addColorStop(1, C.amber + '04');
+            return gradient;
+          },
+          borderWidth: 2,
+          pointRadius: prices.map(function(_, i) {
+            return [7, 9, 11, 12].indexOf(i) !== -1 ? 4 : 2;
+          }),
+          pointBackgroundColor: prices.map(function(p, i) {
+            return [7, 9, 11, 12].indexOf(i) !== -1 ? C.amber : C.amberDim;
+          }),
+          pointBorderColor: C.amber,
+          tension: 0.35,
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return '$' + ctx.parsed.y.toFixed(2) + ' /bbl'; }
+            },
+            backgroundColor: '#1a1a18',
+            borderColor: C.border,
+            borderWidth: 1,
+            bodyColor: C.amber,
+            bodyFont: { family: C.mono, size: 11 },
+            padding: 10,
+          },
+          annotation: { annotations: annotations }
+        },
+        scales: {
+          x: {
+            grid: { color: C.border },
+            border: { color: C.border },
+            ticks: { color: C.textDim, maxRotation: 0 },
+          },
+          y: {
+            min: 65,
+            grid: { color: C.border },
+            border: { color: C.border },
+            ticks: {
+              color: C.textDim,
+              callback: function(v) { return '$' + v; }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ── Chart 3: Status Breakdown ─────────────────────────────────────────────
+  function renderStatus(events) {
+    var counts = { confirmed: 0, economic: 0, suppressed: 0, unconfirmed: 0 };
+    events.forEach(function(e) {
+      var t = (e.type || 'unconfirmed').toLowerCase();
+      if (counts[t] !== undefined) counts[t]++;
+      else counts.unconfirmed++;
+    });
+
+    var labels = ['Confirmed', 'Economic', 'Monitoring', 'Suppressed'];
+    var values = [counts.confirmed, counts.economic, counts.unconfirmed, counts.suppressed];
+    var colors = [C.confirmed, C.economic, C.monitoring, C.suppressed];
+
+    new Chart(document.getElementById('statusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors.map(function(c) { return c + 'cc'; }),
+          borderColor:     colors,
+          borderWidth: 2,
+          hoverOffset: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                var pct = ((ctx.parsed / events.length) * 100).toFixed(0);
+                return '  ' + ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+              }
+            },
+            backgroundColor: '#1a1a18',
+            borderColor: C.border,
+            borderWidth: 1,
+            bodyColor: C.text,
+            bodyFont: { family: C.mono, size: 10 },
+            padding: 10,
+          }
+        }
+      }
+    });
+
+    // Build legend
+    var legend = document.getElementById('status-legend');
+    labels.forEach(function(label, i) {
+      var pct = events.length ? ((values[i] / events.length) * 100).toFixed(0) : 0;
+      var item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = '<div class="legend-dot" style="background:' + colors[i] + '"></div>' +
+        '<span>' + label + ' <span style="color:' + colors[i] + ';font-weight:700">' + values[i] + '</span>' +
+        ' <span style="color:var(--text-dim)">(' + pct + '%)</span></span>';
+      legend.appendChild(item);
+    });
+  }
+
+  // ── Chart 4: Supply Shock ─────────────────────────────────────────────────
+  function renderSupply() {
+    var crises = [
+      { label: '2026 Hormuz\n(current)',      mbpd: 20.0, highlight: true  },
+      { label: 'Iran Rev.\n1978–79',          mbpd: 5.6,  highlight: false },
+      { label: 'Yom Kippur\nEmbargo 1973',    mbpd: 4.4,  highlight: false },
+      { label: 'Iraq–Kuwait\nWar 1990',       mbpd: 4.3,  highlight: false },
+      { label: 'Iran–Iraq\nWar 1980',         mbpd: 4.0,  highlight: false },
+      { label: 'Russia–Ukraine\n2022',        mbpd: 2.0,  highlight: false },
+    ];
+
+    new Chart(document.getElementById('supplyChart'), {
+      type: 'bar',
+      data: {
+        labels: crises.map(function(c) { return c.label.split('\n'); }),
+        datasets: [{
+          data: crises.map(function(c) { return c.mbpd; }),
+          backgroundColor: crises.map(function(c) {
+            return c.highlight ? C.amber + 'dd' : C.textDim + '44';
+          }),
+          borderColor: crises.map(function(c) {
+            return c.highlight ? C.amber : C.borderBright;
+          }),
+          borderWidth: crises.map(function(c) { return c.highlight ? 2 : 1; }),
+          borderRadius: 2,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return '  ' + ctx.parsed.x.toFixed(1) + 'M bbl/day removed'; }
+            },
+            backgroundColor: '#1a1a18',
+            borderColor: C.border,
+            borderWidth: 1,
+            bodyColor: C.text,
+            bodyFont: { family: C.mono, size: 10 },
+            padding: 10,
+          },
+          annotation: {
+            annotations: {
+              combined: {
+                type: 'line',
+                xMin: 5.6 + 4.4 + 4.3 + 4.0 + 2.0,
+                xMax: 5.6 + 4.4 + 4.3 + 4.0 + 2.0,
+                borderColor: C.red + 'aa',
+                borderWidth: 1,
+                borderDash: [4, 4],
+                label: {
+                  content: 'sum of all prior\n(' + (5.6+4.4+4.3+4.0+2.0).toFixed(1) + 'M)',
+                  display: true,
+                  position: 'center',
+                  color: C.red,
+                  font: { family: C.mono, size: 8 },
+                  backgroundColor: 'transparent',
+                  xAdjust: 4,
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            min: 0,
+            max: 22,
+            grid: { color: C.border },
+            border: { color: C.border },
+            ticks: {
+              color: C.textDim,
+              callback: function(v) { return v + 'M'; }
+            },
+            title: {
+              display: true,
+              text: 'Million barrels per day removed from global supply',
+              color: C.textDim,
+              font: { family: C.mono, size: 9 },
+              padding: { top: 8 },
+            }
+          },
+          y: {
+            grid: { display: false },
+            border: { color: C.border },
+            ticks: {
+              color: function(ctx) {
+                return ctx.index === 0 ? C.amber : C.textDim;
+              },
+              font: { family: C.mono, size: 9 },
+            }
+          }
+        }
+      }
+    });
+  }
+
+})();
+</script>
+</body>
+</html>

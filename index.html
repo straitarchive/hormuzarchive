@@ -159,17 +159,29 @@
 
   .sidebar {
     border-right: 1px solid var(--border);
-    padding: 24px 0;
+    padding: 24px 0 0;
     position: sticky;
     top: 170px;
     height: calc(100vh - 170px);
-    overflow-y: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .sidebar-section {
     padding: 0 20px 24px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 24px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-section.day-nav-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 12px;
   }
 
   .sidebar-label {
@@ -180,7 +192,7 @@
     margin-bottom: 12px;
   }
 
-  .day-nav { display: flex; flex-direction: column; gap: 2px; }
+  .day-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; min-height: 0; }
 
   .day-link {
     display: flex;
@@ -490,7 +502,7 @@
 
   @media (max-width: 768px) {
     .main { grid-template-columns: 1fr; }
-    .sidebar { position: static; height: auto; }
+    .sidebar { position: static; height: auto; overflow-y: visible; display: block; }
     .site-title { font-size: 28px; }
     .timeline { padding: 16px; }
     .header-top, .header-main, .filters { padding: 12px 16px; }
@@ -539,7 +551,7 @@
 </div>
 <div class="main">
 <aside class="sidebar">
-<div class="sidebar-section">
+<div class="sidebar-section day-nav-section">
 <div class="sidebar-label">Navigate by Day</div>
 <div class="day-nav"></div>
 </div>
@@ -599,7 +611,7 @@
     // Render day-nav
     document.querySelector('.day-nav').innerHTML = data.days.map(function(d, i) {
       var count = (byDay[d.day] || []).length;
-      return '<div class="day-link' + (i === 0 ? ' active' : '') + '" onclick="scrollToDay(\'' + d.id + '\',this)">' +
+      return '<div class="day-link' + (i === 0 ? ' active' : '') + '" data-day-id="' + d.id + '" onclick="scrollToDay(\'' + d.id + '\',this)">' +
         '<span>Day ' + d.day + ' \u2014 ' + shortDate(d.dateDisplay) + '</span>' +
         '<span class="day-count">' + count + ' events</span></div>';
     }).join('\n');
@@ -672,16 +684,64 @@
     });
   })();
 
-  // ── Dynamic scroll margin for sticky header ──────────────────────────────────
+  // ── Dynamic scroll margin + sidebar positioning ───────────────────────────────
   (function () {
     function applyScrollMargin() {
       var h = (document.querySelector('.site-header') || {}).offsetHeight || 220;
       document.querySelectorAll('.day-block').forEach(function(el) {
         el.style.scrollMarginTop = (h + 16) + 'px';
       });
+      var sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        sidebar.style.top = h + 'px';
+        sidebar.style.height = 'calc(100vh - ' + h + 'px)';
+      }
     }
     applyScrollMargin();
     window.addEventListener('resize', applyScrollMargin);
+  })();
+
+  // ── Scroll spy — highlight active day in sidebar nav ─────────────────────────
+  (function () {
+    function initScrollSpy() {
+      var dayBlocks = document.querySelectorAll('.day-block');
+      if (!dayBlocks.length) return;
+
+      function setActive(id) {
+        var dayNav = document.querySelector('.day-nav');
+        document.querySelectorAll('.day-link').forEach(function(link) {
+          var isActive = link.getAttribute('data-day-id') === id;
+          link.classList.toggle('active', isActive);
+          if (isActive && dayNav) {
+            // scroll the active link into view within the day-nav list
+            var linkTop = link.offsetTop;
+            var navScrollTop = dayNav.scrollTop;
+            var navHeight = dayNav.clientHeight;
+            if (linkTop < navScrollTop || linkTop + link.clientHeight > navScrollTop + navHeight) {
+              dayNav.scrollTo({ top: linkTop - navHeight / 2, behavior: 'smooth' });
+            }
+          }
+        });
+      }
+
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        });
+      }, { rootMargin: '-10% 0px -80% 0px', threshold: 0 });
+
+      dayBlocks.forEach(function(block) { observer.observe(block); });
+    }
+
+    // day-blocks are rendered dynamically; wait for them
+    if (document.querySelector('.day-block')) {
+      initScrollSpy();
+    } else {
+      var mo = new MutationObserver(function(_, obs) {
+        if (document.querySelector('.day-block')) { obs.disconnect(); initScrollSpy(); }
+      });
+      mo.observe(document.querySelector('.timeline') || document.body, { childList: true, subtree: true });
+    }
   })();
 
   // ── Filter & navigation ───────────────────────────────────────────────────────
@@ -696,7 +756,7 @@
   function scrollToDay(id, el) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.querySelectorAll('.day-link').forEach(function(l) { l.classList.remove('active'); });
-    el?.classList.add('active');
+    if (el) el.classList.add('active');
   }
 
   // ── Live Brent Crude price — via allorigins.win CORS proxy → Yahoo Finance ───
